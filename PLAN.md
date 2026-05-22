@@ -14,7 +14,8 @@
 - Added the initial PostgreSQL migration for the Prisma schema.
 - Added `.env.example` with a placeholder PostgreSQL `DATABASE_URL` and updated `.gitignore` so the example file can be committed.
 - Verified the schema milestone with `npx.cmd prisma validate`, `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run test`, and `npm.cmd run format:check`.
-- Prisma client singleton, diary database functions, Auth.js, Argon2, Zod, route handlers, and diary app feature UI have not been added yet.
+- Added the frontend-only signup page at `app/(auth)/signup/page.tsx` with shared theme tokens in `app/globals.css` and tests for the page.
+- Prisma client singleton, diary database functions, Auth.js, Argon2, Zod, route handlers, and the signin/calendar/diary app feature UI have not been added yet.
 
 ## Stack
 
@@ -132,11 +133,13 @@ Route protection:
 
 ### Signup Page
 
+- Frontend-only page implemented.
 - Email input.
 - Password input.
 - Submit button.
+- Inline status text.
 - Validation errors.
-- Successful signup redirects to the calendar page.
+- Successful signup redirects to the calendar page once backend signup exists.
 
 ### Signin Page
 
@@ -263,7 +266,7 @@ End-to-end tests:
 3. Add Prisma and the database schema. Partially done: Prisma packages, schema, and initial migration are added; Prisma client wiring, database functions, and database-related tests are not added yet.
 4. Implement Argon2 password hashing helpers with unit tests.
 5. Implement Auth.js session handling and route protection with integration tests.
-6. Build signup and signin flows with integration tests.
+6. Build signin flow and finish signup/signin integration tests. Partially done: the frontend-only signup page and tests are added; backend signup/auth integration remains.
 7. Add protected app layout with route protection tests.
 8. Build the calendar page with component tests.
 9. Build the diary page with content-only editing and component tests.

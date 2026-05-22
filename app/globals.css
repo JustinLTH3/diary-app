@@ -3,13 +3,39 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --signup-background: #fcf9f8;
+  --signup-card: #ffffff;
+  --signup-card-border: #eeeeee;
+  --signup-divider: #f0f0f0;
+  --signup-primary: #416352;
+  --signup-primary-hover: #5a7c6a;
+  --signup-on-primary: #ffffff;
+  --signup-text: #1c1b1b;
+  --signup-muted: #414844;
+  --signup-input-border: #e5e2e1;
+  --signup-placeholder: #c1c8c2;
+  --signup-status: #727973;
+  --signup-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-signup-background: var(--signup-background);
+  --color-signup-card: var(--signup-card);
+  --color-signup-card-border: var(--signup-card-border);
+  --color-signup-divider: var(--signup-divider);
+  --color-signup-primary: var(--signup-primary);
+  --color-signup-primary-hover: var(--signup-primary-hover);
+  --color-signup-on-primary: var(--signup-on-primary);
+  --color-signup-text: var(--signup-text);
+  --color-signup-muted: var(--signup-muted);
+  --color-signup-input-border: var(--signup-input-border);
+  --color-signup-placeholder: var(--signup-placeholder);
+  --color-signup-status: var(--signup-status);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --shadow-signup-card: var(--signup-card-shadow);
 }
 
 @media (prefers-color-scheme: dark) {
