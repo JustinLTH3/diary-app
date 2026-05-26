@@ -9,6 +9,7 @@
 - Added smoke tests for the generated starter page.
 - Verified the generated project with `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
 - Added Prisma CLI and Prisma Client, aligned at version `7.8.0`.
+- Added the Prisma Postgres driver adapter for Prisma 7 runtime database connections.
 - Added `prisma/schema.prisma` with the `User` and `DiaryEntry` models.
 - Added `prisma.config.ts` for Prisma 7 datasource and migration configuration.
 - Added the initial PostgreSQL migration for the Prisma schema.
@@ -17,7 +18,9 @@
 - Added the frontend-only signup page at `app/(auth)/signup/page.tsx` with shared theme tokens in `app/globals.css` and tests for the page.
 - Added the Prisma client singleton, Zod auth validation, Argon2 password helpers, Auth.js Credentials configuration with JWT sessions, and backend signup/Auth.js route handlers.
 - Added unit and route tests for auth validation, password hashing, credential verification, and the signup API route.
-- The signup page is still frontend-only and is not connected to the backend route yet.
+- Wired the signup form to `POST /api/auth/signup`, including pending, success, duplicate-email, and generic error states.
+- Added component tests for the signup form's frontend API integration states.
+- Verified signup against a local Docker PostgreSQL database after applying the initial Prisma migration.
 - Signin UI, route protection, diary database functions, and the calendar/diary feature UI have not been added yet.
 
 ## Stack
@@ -117,7 +120,8 @@ Signup:
 - Hash password with Argon2.
 - Create user.
 - Backend signup route implemented at `app/api/auth/signup/route.ts`.
-- Automatic signin through Auth.js is not wired yet because the frontend remains intentionally disconnected.
+- Signup frontend integration is implemented and stays on `/signup` after successful account creation.
+- Automatic signin through Auth.js is not wired yet.
 
 Signin:
 
@@ -138,14 +142,15 @@ Route protection:
 
 ### Signup Page
 
-- Frontend-only page implemented.
+- Page implemented and connected to the backend signup route.
 - Email input.
 - Password input.
 - Submit button.
 - Inline status text.
 - Validation errors.
-- Backend signup route now exists, but the page is still not connected to it.
-- Successful signup redirect to the calendar page remains pending until the frontend integration is added.
+- Submit posts credentials to `POST /api/auth/signup`.
+- Shows pending, success, duplicate-email, invalid-credentials, and generic error states.
+- Successful signup currently stays on `/signup`; redirect or automatic signin remains pending.
 
 ### Signin Page
 
@@ -239,6 +244,7 @@ Unit tests:
 - Date parsing and formatting.
 - Validation schemas. Implemented for auth credentials.
 - Argon2 hash and verify helpers. Implemented.
+- Signup form API integration states. Implemented with mocked `fetch`.
 - Auth.js session helper.
 - Diary save logic.
 
@@ -269,10 +275,10 @@ End-to-end tests:
 
 1. Set up Next.js, TypeScript, ESLint, Tailwind CSS, npm, and the base App Router project. Done.
 2. Add formatting and test tooling. Done.
-3. Add Prisma and the database schema. Partially done: Prisma packages, schema, and initial migration are added; Prisma client wiring, database functions, and database-related tests are not added yet.
+3. Add Prisma and the database schema. Partially done: Prisma packages, schema, Prisma 7 Postgres adapter wiring, and initial migration are added; diary database functions and database-related tests are not added yet.
 4. Implement Argon2 password hashing helpers with unit tests. Done.
 5. Implement Auth.js session handling and route protection with integration tests. Partially done: Auth.js Credentials and JWT session configuration are added; route protection and session helper coverage remain.
-6. Build signin flow and finish signup/signin integration tests. Partially done: the frontend-only signup page, backend signup route, and auth helper/route tests are added; signup frontend integration and signin UI remain.
+6. Build signin flow and finish signup/signin integration tests. Partially done: the signup page is wired to the backend route, auth helper/route tests are added, and signup frontend integration tests are added; signin UI remains.
 7. Add protected app layout with route protection tests.
 8. Build the calendar page with component tests.
 9. Build the diary page with content-only editing and component tests.
