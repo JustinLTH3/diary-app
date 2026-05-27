@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
 
+import { authOptions } from "@/auth";
 import { SigninForm } from "@/components/auth/signin-form";
 
 export const metadata: Metadata = {
@@ -8,7 +11,13 @@ export const metadata: Metadata = {
   description: "Sign in to your Diary account.",
 };
 
-export default function SigninPage() {
+export default async function SigninPage() {
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.id) {
+    redirect("/calendar");
+  }
+
   return (
     <main className="flex min-h-screen flex-1 items-center justify-center bg-signup-background px-6 py-20 text-signup-text">
       <div className="w-full max-w-md">

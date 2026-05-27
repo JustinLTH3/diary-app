@@ -31,6 +31,11 @@ describe("authOptions", () => {
     vi.clearAllMocks();
   });
 
+  it("uses the app signin page and AUTH_SECRET", () => {
+    expect(authOptions.pages?.signIn).toBe("/signin");
+    expect(authOptions.secret).toBe(process.env.AUTH_SECRET);
+  });
+
   it("authorizes valid signin credentials", async () => {
     verifyCredentialsMock.mockResolvedValue({
       id: "user_1",
