@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials) {
+        if (!hasCredentialStrings(credentials)) {
           return null;
         }
 
@@ -40,3 +40,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+function hasCredentialStrings(
+  credentials: Record<string, unknown> | undefined,
+): credentials is { email: string; password: string } {
+  return typeof credentials?.email === "string" && typeof credentials.password === "string";
+}

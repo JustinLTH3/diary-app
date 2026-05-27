@@ -21,7 +21,12 @@
 - Wired the signup form to `POST /api/auth/signup`, including pending, success, duplicate-email, and generic error states.
 - Added component tests for the signup form's frontend API integration states.
 - Verified signup against a local Docker PostgreSQL database after applying the initial Prisma migration.
-- Signin UI, route protection, diary database functions, and the calendar/diary feature UI have not been added yet.
+- Added a visual-only signin page at `app/(auth)/signin/page.tsx` that matches the signup theme.
+- Extracted the visual-only signin form into `components/auth/signin-form.tsx`.
+- Added component coverage for the visual-only signin page.
+- Hardened the Auth.js Credentials provider so malformed signin credentials return `null` before credential verification.
+- Added Auth.js configuration tests for signin authorization plus JWT/session user id propagation.
+- Route protection, diary database functions, functional signin frontend wiring, and the calendar/diary feature UI have not been added yet.
 
 ## Stack
 
@@ -130,7 +135,11 @@ Signin:
 - Fetch user by email inside the provider.
 - Verify password with Argon2 inside the provider.
 - Use the Auth.js JWT session strategy.
-- Auth.js configuration and provider wiring are implemented; the signin page and flow are still pending.
+- Auth.js configuration and provider wiring are implemented.
+- Malformed provider credentials return `null` before calling the credential verifier.
+- JWT sessions expose the authenticated user's id on `session.user.id`.
+- The signin page is visual-only and is not connected to Auth.js yet.
+- Functional signin frontend submission and redirect behavior remain pending.
 
 Route protection:
 
@@ -154,11 +163,13 @@ Route protection:
 
 ### Signin Page
 
+- Visual-only page implemented at `/signin`.
 - Email input.
 - Password input.
-- Submit button.
-- Validation errors.
-- Successful signin redirects to the calendar page.
+- Non-functional `type="button"` submit-style button.
+- Link to the signup page.
+- No client component, submit handler, validation state, Auth.js call, or redirect is wired yet.
+- Future functional signin should validate credentials through Auth.js and redirect successful signins to the calendar page.
 
 ### Calendar Page
 
@@ -245,18 +256,20 @@ Unit tests:
 - Validation schemas. Implemented for auth credentials.
 - Argon2 hash and verify helpers. Implemented.
 - Signup form API integration states. Implemented with mocked `fetch`.
+- Auth.js Credentials provider and JWT/session callbacks. Implemented.
 - Auth.js session helper.
 - Diary save logic.
 
 Integration tests:
 
 - Signup creates a user with an Argon2 password hash. Implemented via route/helper tests.
-- Signin verifies credentials through Auth.js. Helper coverage is implemented; UI/integration flow remains.
+- Signin verifies credentials through Auth.js. Helper and Auth.js configuration coverage are implemented; frontend flow remains.
 - Protected routes reject missing sessions.
 - Diary access is scoped to the authenticated user.
 
 Component tests:
 
+- Visual-only signin page renders expected fields and links. Implemented.
 - Calendar renders the correct month.
 - Calendar date links point to the correct diary route.
 - Diary editor renders existing content.
@@ -277,8 +290,8 @@ End-to-end tests:
 2. Add formatting and test tooling. Done.
 3. Add Prisma and the database schema. Partially done: Prisma packages, schema, Prisma 7 Postgres adapter wiring, and initial migration are added; diary database functions and database-related tests are not added yet.
 4. Implement Argon2 password hashing helpers with unit tests. Done.
-5. Implement Auth.js session handling and route protection with integration tests. Partially done: Auth.js Credentials and JWT session configuration are added; route protection and session helper coverage remain.
-6. Build signin flow and finish signup/signin integration tests. Partially done: the signup page is wired to the backend route, auth helper/route tests are added, and signup frontend integration tests are added; signin UI remains.
+5. Implement Auth.js session handling and route protection with integration tests. Partially done: Auth.js Credentials, JWT session configuration, credential hardening, and callback tests are added; route protection and session helper coverage remain.
+6. Build signin flow and finish signup/signin integration tests. Partially done: the signup page is wired to the backend route, auth helper/route tests are added, signup frontend integration tests are added, and a visual-only signin page exists; functional signin frontend wiring remains.
 7. Add protected app layout with route protection tests.
 8. Build the calendar page with component tests.
 9. Build the diary page with content-only editing and component tests.
