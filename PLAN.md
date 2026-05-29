@@ -2,18 +2,15 @@
 
 ## Current Status
 
-- Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, and temporary `/calendar` page are implemented.
-- Signup posts to `POST /api/auth/signup`; the current working tree also attempts automatic Auth.js signin after successful signup and redirects to `/calendar`.
+- Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and temporary protected `/calendar` page are implemented.
+- Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is only a temporary authenticated-success screen with logout; real route protection, calendar UI, diary pages, diary persistence, and auto-save are still pending.
-- Tests cover auth validation, password hashing, user auth helpers, Auth.js callbacks/provider behavior, signup route/form states, signin flow states, and the temporary calendar/logout page. E2E coverage is still limited to smoke/signup rendering.
+- `/calendar` is protected with `requireUser()` but still only renders a temporary authenticated-success screen with logout; real calendar UI, diary pages, diary persistence, and auto-save are still pending.
+- Tests cover auth validation, password hashing, user auth helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, and the temporary protected calendar/logout page. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
 
-- `components/auth/signup-form.tsx` has unstaged changes for automatic signin after signup.
-- Signup component tests have not yet been updated to cover the automatic signin and `/calendar` redirect behavior.
-- There is no protected app layout or route guard for authenticated app pages yet.
-- `/calendar` is not yet protected by server-side session checks.
+- Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
 - The real calendar UI has not been built.
 - Diary route pages and diary UI have not been built.
 - Diary database helper functions have not been implemented.
@@ -44,7 +41,7 @@ app/
       page.tsx
   (app)/
     calendar/
-      page.tsx                      # temporary success/logout screen
+      page.tsx                      # protected temporary success/logout screen
     diary/                          # pending
       [date]/
         page.tsx
@@ -153,9 +150,9 @@ Signin:
 
 Route protection:
 
-- Pending.
-- Protected pages should require a valid Auth.js session.
-- Missing sessions should redirect to `/signin`.
+- `requireUser()` is implemented for server-side page/data access checks.
+- Protected pages should call `requireUser()` close to their server-side page/data loading.
+- Missing sessions redirect to `/signin`.
 - Server-side diary operations should extract `userId` from the session and scope every query with it.
 
 ## Pages
@@ -180,7 +177,8 @@ Route protection:
 ### Calendar Page
 
 - Temporary implementation exists at `/calendar`.
-- Currently renders a success heading and logout button.
+- Requires authentication through `requireUser()`.
+- Currently renders a success heading and logout button for authenticated users.
 - Real month calendar behavior remains pending.
 
 Planned behavior:
@@ -227,10 +225,10 @@ Implemented:
 - `verifyCredentials(email, password)`
 - `hashPassword(password)`
 - `verifyPassword(hash, password)`
+- `requireUser()`
 
 Pending:
 
-- `requireUser()`
 - `getEntryForDate(userId, date)`
 - `saveEntryContent(userId, date, content)`
 - `listEntryDatesForMonth(userId, year, month)`
@@ -256,21 +254,19 @@ Pending:
 Implemented:
 
 - Starter page smoke tests.
-- Signup page rendering and API-state component tests.
+- Signup page rendering, API-state, automatic signin, and `/calendar` redirect component tests.
 - Signin page rendering, session redirect, Auth.js submit, pending, invalid credential, and generic error component tests.
-- Temporary calendar/logout component tests.
+- Temporary protected calendar/logout component tests.
 - Auth validation tests.
 - Argon2 hash and verify helper tests.
 - User creation and credential verification helper tests.
+- Auth.js session helper tests for `requireUser()`.
 - Signup route tests.
 - Auth.js provider and JWT/session callback tests.
 - Signup page rendering E2E test.
 
 Pending or needs update:
 
-- Signup automatic signin and redirect component tests.
-- Auth.js session helper tests.
-- Protected route tests.
 - Date parsing and formatting tests.
 - Diary validation tests.
 - Diary database helper tests.
@@ -282,15 +278,12 @@ Pending or needs update:
 
 ## Implementation Order
 
-1. Update signup tests for automatic signin and `/calendar` redirect behavior.
-2. Add `requireUser()` and route protection tests.
-3. Protect `/calendar` and any future `(app)` pages.
-4. Replace the temporary calendar success page with the real month calendar UI and component tests.
-5. Add date parsing, date formatting, and date validation helpers with tests.
-6. Add diary validation helpers with tests.
-7. Add diary database helpers for loading, saving, and listing entry dates.
-8. Build `/diary/[date]` with authenticated content loading.
-9. Implement debounced diary auto-save with unit and component tests.
-10. Add diary API route handlers if the final auto-save design uses route handlers instead of server actions.
-11. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
-12. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
+1. Replace the temporary calendar success page with the real protected month calendar UI and component tests.
+2. Add date parsing, date formatting, and date validation helpers with tests.
+3. Add diary validation helpers with tests.
+4. Add diary database helpers for loading, saving, and listing entry dates.
+5. Build `/diary/[date]` with authenticated content loading.
+6. Implement debounced diary auto-save with unit and component tests.
+7. Add diary API route handlers if the final auto-save design uses route handlers instead of server actions.
+8. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
+9. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.

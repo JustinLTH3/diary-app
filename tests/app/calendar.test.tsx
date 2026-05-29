@@ -4,7 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import CalendarPage from "@/app/(app)/calendar/page";
 
+const requireUserMock = vi.hoisted(() => vi.fn());
 const signOutMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/auth/requireUser", () => ({
+  requireUser: requireUserMock,
+}));
 
 vi.mock("next-auth/react", () => ({
   signOut: signOutMock,
@@ -15,9 +20,10 @@ describe("CalendarPage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the temporary signin success page", () => {
-    render(<CalendarPage />);
+  it("requires an authenticated user before rendering", async () => {
+    render(await CalendarPage());
 
+    expect(requireUserMock).toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "Sign in success." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
   });
@@ -25,7 +31,7 @@ describe("CalendarPage", () => {
   it("signs out to the signin page", async () => {
     const user = userEvent.setup();
 
-    render(<CalendarPage />);
+    render(await CalendarPage());
 
     await user.click(screen.getByRole("button", { name: "Log out" }));
 
