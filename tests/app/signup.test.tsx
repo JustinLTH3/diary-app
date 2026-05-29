@@ -5,11 +5,26 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import SignupPage from "@/app/(auth)/signup/page";
 
 const fetchMock = vi.fn<typeof fetch>();
+const signInMock = vi.hoisted(() => vi.fn());
+const pushMock = vi.hoisted(() => vi.fn());
+const refreshMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next-auth/react", () => ({
+  signIn: signInMock,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+    refresh: refreshMock,
+  }),
+}));
 
 describe("SignupPage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     fetchMock.mockReset();
+    vi.clearAllMocks();
   });
 
   it("renders the frontend signup form", () => {
@@ -27,6 +42,7 @@ describe("SignupPage", () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ user: { id: "user_1" } }), { status: 201 }),
     );
+    signInMock.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<SignupPage />);
@@ -46,6 +62,29 @@ describe("SignupPage", () => {
       }),
     });
     expect(await screen.findByText("Account created.")).toBeInTheDocument();
+  });
+
+  it("signs in and redirects to calendar after successful signup", async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ user: { id: "user_1" } }), { status: 201 }),
+    );
+    signInMock.mockResolvedValue({ ok: true, error: null });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<SignupPage />);
+
+    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Password"), "password123");
+    await user.click(screen.getByRole("button", { name: "Create Account" }));
+
+    expect(signInMock).toHaveBeenCalledWith("credentials", {
+      email: "person@example.com",
+      password: "password123",
+      redirect: false,
+    });
+    expect(pushMock).toHaveBeenCalledWith("/calendar");
+    expect(refreshMock).toHaveBeenCalled();
   });
 
   it("shows duplicate email feedback from the signup API", async () => {
@@ -74,6 +113,7 @@ describe("SignupPage", () => {
         resolveSignup = resolve;
       }),
     );
+    signInMock.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<SignupPage />);

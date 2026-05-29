@@ -2,45 +2,38 @@
 
 ## Current Status
 
-- `PLAN.md` has been moved into the Git-tracked project root.
-- Created the nested `diary-app` project folder.
-- Initialized the project root with Next.js App Router, TypeScript, ESLint, Tailwind CSS, npm, and the `@/*` import alias.
-- Added Prettier, Vitest, React Testing Library, jsdom, and Playwright tooling.
-- Added smoke tests for the generated starter page.
-- Verified the generated project with `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
-- Added Prisma CLI and Prisma Client, aligned at version `7.8.0`.
-- Added the Prisma Postgres driver adapter for Prisma 7 runtime database connections.
-- Added `prisma/schema.prisma` with the `User` and `DiaryEntry` models.
-- Added `prisma.config.ts` for Prisma 7 datasource and migration configuration.
-- Added the initial PostgreSQL migration for the Prisma schema.
-- Added `.env.example` with placeholder `DATABASE_URL` and `AUTH_SECRET` values, and updated `.gitignore` so the example file can be committed.
-- Verified the schema milestone with `npx.cmd prisma validate`, `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run test`, and `npm.cmd run format:check`.
-- Added the frontend-only signup page at `app/(auth)/signup/page.tsx` with shared theme tokens in `app/globals.css` and tests for the page.
-- Added the Prisma client singleton, Zod auth validation, Argon2 password helpers, Auth.js Credentials configuration with JWT sessions, and backend signup/Auth.js route handlers.
-- Added unit and route tests for auth validation, password hashing, credential verification, and the signup API route.
-- Wired the signup form to `POST /api/auth/signup`, including pending, success, duplicate-email, and generic error states.
-- Added component tests for the signup form's frontend API integration states.
-- Verified signup against a local Docker PostgreSQL database after applying the initial Prisma migration.
-- Added a visual-only signin page at `app/(auth)/signin/page.tsx` that matches the signup theme.
-- Extracted the visual-only signin form into `components/auth/signin-form.tsx`.
-- Added component coverage for the visual-only signin page.
-- Hardened the Auth.js Credentials provider so malformed signin credentials return `null` before credential verification.
-- Added Auth.js configuration tests for signin authorization plus JWT/session user id propagation.
-- Route protection, diary database functions, functional signin frontend wiring, and the calendar/diary feature UI have not been added yet.
+- Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, and temporary `/calendar` page are implemented.
+- Signup posts to `POST /api/auth/signup`; the current working tree also attempts automatic Auth.js signin after successful signup and redirects to `/calendar`.
+- Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
+- `/calendar` is only a temporary authenticated-success screen with logout; real route protection, calendar UI, diary pages, diary persistence, and auto-save are still pending.
+- Tests cover auth validation, password hashing, user auth helpers, Auth.js callbacks/provider behavior, signup route/form states, signin flow states, and the temporary calendar/logout page. E2E coverage is still limited to smoke/signup rendering.
+
+## Known Gaps
+
+- `components/auth/signup-form.tsx` has unstaged changes for automatic signin after signup.
+- Signup component tests have not yet been updated to cover the automatic signin and `/calendar` redirect behavior.
+- There is no protected app layout or route guard for authenticated app pages yet.
+- `/calendar` is not yet protected by server-side session checks.
+- The real calendar UI has not been built.
+- Diary route pages and diary UI have not been built.
+- Diary database helper functions have not been implemented.
+- Date parsing and diary validation helpers have not been implemented.
+- Auto-save behavior has not been implemented.
+- Full signup-signin-calendar-diary E2E coverage has not been implemented.
 
 ## Stack
 
-- Frontend: Next.js with App Router and TypeScript.
-- Backend: Next.js Route Handlers or Server Actions.
+- Frontend: Next.js App Router, React 19, TypeScript.
+- Backend: Next.js Route Handlers and server components where appropriate.
 - Database: PostgreSQL.
-- ORM: Prisma.
+- ORM: Prisma 7.
 - Password hashing: Argon2.
 - Authentication: Auth.js with the Credentials provider and JWT session strategy.
 - Validation: Zod.
 - Testing: Vitest, React Testing Library, and Playwright.
-- Styling: Tailwind CSS or the project's existing styling approach.
+- Styling: Tailwind CSS 4 with shared theme tokens in `app/globals.css`.
 
-## Core App Structure
+## App Structure
 
 ```txt
 app/
@@ -51,34 +44,52 @@ app/
       page.tsx
   (app)/
     calendar/
-      page.tsx
-    diary/
+      page.tsx                      # temporary success/logout screen
+    diary/                          # pending
       [date]/
         page.tsx
   api/
     auth/
+      [...nextauth]/
+        route.ts
       signup/
         route.ts
-      signin/
-        route.ts
-      signout/
-        route.ts
-    diary/
+    diary/                          # pending
       route.ts
       dates/
         route.ts
 components/
   auth/
+    logout-button.tsx
+    signin-form.tsx
+    signup-form.tsx
   calendar/
   diary/
 lib/
   auth/
+    createUser.ts
+    hashPassword.ts
+    requireUser.ts
+    verifyCredentials.ts
+    verifyPassword.ts
   db/
+    prisma.ts
   diary/
-  validation/
+    getEntryForDate.ts
+    saveEntryContent.ts
+    listEntryDatesForMonth.ts
   dates/
+    parseDiaryDate.ts
+    formatDiaryDate.ts
+  validation/
+    auth.ts
+    diary.ts
+    date.ts
 prisma/
 tests/
+types/
+  next-auth.d.ts
+auth.ts
 ```
 
 ## Data Model
@@ -111,190 +122,175 @@ Rules:
 
 - One diary entry per user per date.
 - The unique key is `userId + date`.
-- Store dates consistently as PostgreSQL `DATE` values mapped from `YYYY-MM-DD` routes.
+- Store diary dates as PostgreSQL `DATE` values mapped from `YYYY-MM-DD` routes.
 - Only `content` is editable by the user.
 
 ## Authentication
-
-Authentication uses Auth.js with email/password credentials.
 
 Signup:
 
 - Normalize email.
 - Validate email and password.
 - Hash password with Argon2.
-- Create user.
-- Backend signup route implemented at `app/api/auth/signup/route.ts`.
-- Signup frontend integration is implemented and stays on `/signup` after successful account creation.
-- Automatic signin through Auth.js is not wired yet.
+- Create user through `createUser`.
+- Return `201` with the created user on success.
+- Return `400` for invalid payloads.
+- Return `409` for duplicate emails.
+- Frontend posts credentials to `POST /api/auth/signup`.
+- Frontend currently attempts automatic Auth.js signin after successful signup and redirects to `/calendar` if signin succeeds.
 
 Signin:
 
 - Normalize email.
 - Use the Auth.js Credentials provider.
-- Fetch user by email inside the provider.
-- Verify password with Argon2 inside the provider.
-- Use the Auth.js JWT session strategy.
-- Auth.js configuration and provider wiring are implemented.
-- Malformed provider credentials return `null` before calling the credential verifier.
-- JWT sessions expose the authenticated user's id on `session.user.id`.
-- The signin page is visual-only and is not connected to Auth.js yet.
-- Functional signin frontend submission and redirect behavior remain pending.
+- Fetch user by email inside `verifyCredentials`.
+- Verify password with Argon2.
+- Return `null` for invalid, missing, or malformed credentials.
+- Use JWT sessions.
+- Expose the authenticated user's id on `session.user.id`.
+- Redirect already-authenticated users away from `/signin` to `/calendar`.
+- Functional frontend signin is implemented and redirects successful signins to `/calendar`.
 
 Route protection:
 
-- Protected pages require a valid Auth.js session.
-- Missing sessions redirect to signin.
-- The server extracts `userId` from the session and scopes every diary query with it.
+- Pending.
+- Protected pages should require a valid Auth.js session.
+- Missing sessions should redirect to `/signin`.
+- Server-side diary operations should extract `userId` from the session and scope every query with it.
 
 ## Pages
 
 ### Signup Page
 
-- Page implemented and connected to the backend signup route.
-- Email input.
-- Password input.
-- Submit button.
-- Inline status text.
-- Validation errors.
-- Submit posts credentials to `POST /api/auth/signup`.
+- Implemented at `/signup`.
+- Renders email and password fields.
+- Posts to `POST /api/auth/signup`.
 - Shows pending, success, duplicate-email, invalid-credentials, and generic error states.
-- Successful signup currently stays on `/signup`; redirect or automatic signin remains pending.
+- Current working tree attempts automatic signin after account creation and redirects to `/calendar`.
 
 ### Signin Page
 
-- Visual-only page implemented at `/signin`.
-- Email input.
-- Password input.
-- Non-functional `type="button"` submit-style button.
-- Link to the signup page.
-- No client component, submit handler, validation state, Auth.js call, or redirect is wired yet.
-- Future functional signin should validate credentials through Auth.js and redirect successful signins to the calendar page.
+- Implemented at `/signin`.
+- Redirects authenticated users to `/calendar`.
+- Renders email and password fields.
+- Submits through Auth.js credentials signin.
+- Shows pending, invalid-credentials, and generic error states.
+- Redirects successful signins to `/calendar`.
 
 ### Calendar Page
 
-- Shows a month calendar.
-- Lets the user select a date.
+- Temporary implementation exists at `/calendar`.
+- Currently renders a success heading and logout button.
+- Real month calendar behavior remains pending.
+
+Planned behavior:
+
+- Require authentication.
+- Show a month calendar.
+- Let the user select a date.
 - Clicking a day routes to `/diary/YYYY-MM-DD`.
-- Marks days that already have diary content.
+- Mark days that already have diary content.
 
 ### Diary Page
 
 Route: `/diary/[date]`
 
-- Loads the authenticated user's diary content for the selected date.
-- Shows only an editable content field.
-- Auto-saves content after edits.
-- Shows save state: saving, saved, or error.
-- Creates the entry on first auto-save if none exists.
+- Pending.
 
-#### Auto-Save Behavior
+Planned behavior:
 
-- The editor keeps local content state.
-- Changes trigger a debounced save after 1 second of no editing.
-- Auto-save only runs if the content has changed since the last successful save.
-- Save requests are idempotent using `upsert` by `userId + date`.
-- If a save fails, show a non-blocking error state and retry on the next edit.
-- Avoid saving unchanged content.
-- Closing or leaving the page triggers a final save attempt when there are unsaved changes.
+- Require authentication.
+- Validate the route date.
+- Load the authenticated user's diary content for the selected date.
+- Show only an editable content field.
+- Auto-save content after edits.
+- Show save state: saving, saved, or error.
+- Create the entry on first auto-save if none exists.
+
+## Auto-Save Behavior
+
+- Pending.
+- The editor should keep local content state.
+- Changes should trigger a debounced save after 1 second of no editing.
+- Auto-save should only run if content changed since the last successful save.
+- Save requests should be idempotent using an upsert by `userId + date`.
+- Failed saves should show a non-blocking error state and retry on the next edit.
+- Unchanged content should not be saved.
+- Closing or leaving the page should trigger a final save attempt when there are unsaved changes.
 - If the final save fails, show a confirmation prompt before quitting with unsaved content.
 
 ## Server Logic
 
-Keep business logic outside page components so features can be added later without rewriting routes or UI.
-
-```txt
-lib/auth/
-  hashPassword.ts
-  verifyPassword.ts
-  createUser.ts
-  verifyCredentials.ts
-  requireUser.ts
-
-lib/diary/
-  getEntryForDate.ts
-  saveEntryContent.ts
-  listEntryDatesForMonth.ts
-
-lib/dates/
-  parseDiaryDate.ts
-  formatDiaryDate.ts
-```
-
-Core operations:
+Implemented:
 
 - `createUser(email, password)`
 - `verifyCredentials(email, password)`
-- `requireUser()`: Verifies the Auth.js session and returns the authenticated user.
+- `hashPassword(password)`
+- `verifyPassword(hash, password)`
+
+Pending:
+
+- `requireUser()`
 - `getEntryForDate(userId, date)`
 - `saveEntryContent(userId, date, content)`
 - `listEntryDatesForMonth(userId, year, month)`
+- `parseDiaryDate(value)`
+- `formatDiaryDate(date)`
 
 ## Validation
 
-Use Zod schemas shared by route handlers and client forms where practical.
-
-```txt
-lib/validation/
-  auth.ts
-  diary.ts
-  date.ts
-```
-
-Validate:
+Implemented:
 
 - Email format.
+- Email trimming and lowercasing.
 - Password minimum length.
+
+Pending:
+
 - Date route format: `YYYY-MM-DD`.
-- Content maximum length.
+- Diary content maximum length.
+- Month/year query validation for calendar entry markers.
 
 ## Testing Plan
 
-Unit tests:
+Implemented:
 
-- Date parsing and formatting.
-- Validation schemas. Implemented for auth credentials.
-- Argon2 hash and verify helpers. Implemented.
-- Signup form API integration states. Implemented with mocked `fetch`.
-- Auth.js Credentials provider and JWT/session callbacks. Implemented.
-- Auth.js session helper.
-- Diary save logic.
+- Starter page smoke tests.
+- Signup page rendering and API-state component tests.
+- Signin page rendering, session redirect, Auth.js submit, pending, invalid credential, and generic error component tests.
+- Temporary calendar/logout component tests.
+- Auth validation tests.
+- Argon2 hash and verify helper tests.
+- User creation and credential verification helper tests.
+- Signup route tests.
+- Auth.js provider and JWT/session callback tests.
+- Signup page rendering E2E test.
 
-Integration tests:
+Pending or needs update:
 
-- Signup creates a user with an Argon2 password hash. Implemented via route/helper tests.
-- Signin verifies credentials through Auth.js. Helper and Auth.js configuration coverage are implemented; frontend flow remains.
-- Protected routes reject missing sessions.
-- Diary access is scoped to the authenticated user.
-
-Component tests:
-
-- Visual-only signin page renders expected fields and links. Implemented.
-- Calendar renders the correct month.
-- Calendar date links point to the correct diary route.
-- Diary editor renders existing content.
-- Diary editor shows saving, saved, and error states.
-
-End-to-end tests:
-
-- User signs up.
-- User selects a date from the calendar.
-- User writes diary content.
-- Content auto-saves.
-- User signs out and signs back in.
-- Saved content is still available on the same date.
+- Signup automatic signin and redirect component tests.
+- Auth.js session helper tests.
+- Protected route tests.
+- Date parsing and formatting tests.
+- Diary validation tests.
+- Diary database helper tests.
+- Calendar month rendering tests.
+- Calendar diary-date marker tests.
+- Diary editor render and save-state tests.
+- Debounced auto-save tests.
+- Full E2E flow: sign up, land on calendar, select a date, write diary content, auto-save, sign out, sign back in, and confirm saved content.
 
 ## Implementation Order
 
-1. Set up Next.js, TypeScript, ESLint, Tailwind CSS, npm, and the base App Router project. Done.
-2. Add formatting and test tooling. Done.
-3. Add Prisma and the database schema. Partially done: Prisma packages, schema, Prisma 7 Postgres adapter wiring, and initial migration are added; diary database functions and database-related tests are not added yet.
-4. Implement Argon2 password hashing helpers with unit tests. Done.
-5. Implement Auth.js session handling and route protection with integration tests. Partially done: Auth.js Credentials, JWT session configuration, credential hardening, and callback tests are added; route protection and session helper coverage remain.
-6. Build signin flow and finish signup/signin integration tests. Partially done: the signup page is wired to the backend route, auth helper/route tests are added, signup frontend integration tests are added, and a visual-only signin page exists; functional signin frontend wiring remains.
-7. Add protected app layout with route protection tests.
-8. Build the calendar page with component tests.
-9. Build the diary page with content-only editing and component tests.
-10. Implement debounced auto-save with unit and component tests.
-11. Add validation and error handling alongside each related feature.
-12. Add E2E tests for the complete signup signin calendar diary and auto-save flow.
+1. Update signup tests for automatic signin and `/calendar` redirect behavior.
+2. Add `requireUser()` and route protection tests.
+3. Protect `/calendar` and any future `(app)` pages.
+4. Replace the temporary calendar success page with the real month calendar UI and component tests.
+5. Add date parsing, date formatting, and date validation helpers with tests.
+6. Add diary validation helpers with tests.
+7. Add diary database helpers for loading, saving, and listing entry dates.
+8. Build `/diary/[date]` with authenticated content loading.
+9. Implement debounced diary auto-save with unit and component tests.
+10. Add diary API route handlers if the final auto-save design uses route handlers instead of server actions.
+11. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
+12. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.

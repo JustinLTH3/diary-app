@@ -1,5 +1,7 @@
 "use client";
 
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 const initialStatus = "Create your account to begin writing.";
@@ -13,7 +15,7 @@ type SignupResponse = {
 export function SignupForm() {
   const [status, setStatus] = useState(initialStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const router = useRouter();
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -35,6 +37,17 @@ export function SignupForm() {
 
       if (response.status === 201) {
         setStatus(successStatus);
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (result?.ok && !result.error) {
+          router.push("/calendar");
+          router.refresh();
+          return;
+        }
         return;
       }
 
