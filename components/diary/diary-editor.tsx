@@ -1,20 +1,113 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { diaryContentMaxLength } from "@/lib/validation/diary";
 
 type DiaryEditorProps = {
   date: string;
   initialContent?: string;
 };
 
-const characterLimit = 10000;
+type SaveStatus = "ready" | "unsaved" | "saving" | "saved" | "error";
+
+const statusLabels: Record<SaveStatus, string> = {
+  ready: "Ready",
+  unsaved: "Unsaved changes",
+  saving: "Saving...",
+  saved: "Saved",
+  error: "Unable to save",
+};
 
 export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
   const [content, setContent] = useState(initialContent);
-  const [lastSavedContent] = useState(initialContent);
-  const hasUnsavedChanges = content !== lastSavedContent;
-  const remainingCharacters = characterLimit - content.length;
-  const status = hasUnsavedChanges ? "Unsaved changes" : "Ready";
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("ready");
+  const contentRef = useRef(initialContent);
+  const lastSavedContentRef = useRef(initialContent);
+  const saveRequestIdRef = useRef(0);
+  const remainingCharacters = diaryContentMaxLength - content.length;
+
+  useEffect(() => {
+    setContent(initialContent);
+    setSaveStatus("ready");
+    contentRef.current = initialContent;
+    lastSavedContentRef.current = initialContent;
+    saveRequestIdRef.current += 1;
+  }, [date, initialContent]);
+
+  const saveContent = useCallback(
+    async (nextContent: string) => {
+      if (nextContent === lastSavedContentRef.current) {
+        setSaveStatus("ready");
+        return;
+      }
+
+      const requestId = saveRequestIdRef.current + 1;
+      saveRequestIdRef.current = requestId;
+      setSaveStatus("saving");
+
+      try {
+        const response = await fetch("/api/diary", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date,
+            content: nextContent,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to save diary entry.");
+        }
+
+        await response.json();
+
+        if (saveRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        lastSavedContentRef.current = nextContent;
+        setSaveStatus(contentRef.current === nextContent ? "saved" : "unsaved");
+      } catch {
+        if (saveRequestIdRef.current === requestId) {
+          setSaveStatus("error");
+        }
+      }
+    },
+    [date],
+  );
+
+  useEffect(() => {
+    if (content === lastSavedContentRef.current) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void saveContent(content);
+    }, 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [content, saveContent]);
+
+  useEffect(() => {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      const latestContent = contentRef.current;
+
+      if (latestContent === lastSavedContentRef.current) {
+        return;
+      }
+
+      sendFinalSave(date, latestContent);
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [date]);
 
   const wordCount = useMemo(() => {
     const trimmedContent = content.trim();
@@ -42,7 +135,7 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
           aria-live="polite"
           className="rounded-md border border-signup-input-border px-3 py-2 text-sm font-medium text-signup-muted"
         >
-          {status}
+          {statusLabels[saveStatus]}
         </p>
       </div>
 
@@ -54,8 +147,14 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
           id="diary-content"
           name="content"
           value={content}
-          maxLength={characterLimit}
-          onChange={(event) => setContent(event.target.value)}
+          maxLength={diaryContentMaxLength}
+          onChange={(event) => {
+            const nextContent = event.target.value;
+
+            setContent(nextContent);
+            contentRef.current = nextContent;
+            setSaveStatus(nextContent === lastSavedContentRef.current ? "ready" : "unsaved");
+          }}
           placeholder="Start writing..."
           className="min-h-[50vh] flex-1 resize-none border-0 bg-transparent text-base leading-8 text-signup-text outline-none placeholder:text-signup-placeholder focus:ring-0"
         />
@@ -67,6 +166,27 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
       </footer>
     </section>
   );
+}
+
+function sendFinalSave(date: string, content: string) {
+  const body = JSON.stringify({ date, content });
+
+  if (navigator.sendBeacon) {
+    const payload = new Blob([body], { type: "application/json" });
+
+    if (navigator.sendBeacon("/api/diary", payload)) {
+      return;
+    }
+  }
+
+  void fetch("/api/diary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body,
+    keepalive: true,
+  });
 }
 
 function formatDiaryDate(value: string) {

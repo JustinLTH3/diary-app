@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { DiaryEditor } from "@/components/diary/diary-editor";
 import { requireUser } from "@/lib/auth/requireUser";
 import { parseDiaryDate } from "@/lib/dates/parseDiaryDate";
+import { getEntryForDate } from "@/lib/diary/getEntryForDate";
 
 type DiaryPageProps = {
   params: Promise<{
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DiaryPage({ params }: DiaryPageProps) {
-  await requireUser();
+  const user = await requireUser();
 
   const { date } = await params;
   const parsedDate = parseDiaryDate(date);
@@ -31,6 +32,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   const calendarHref = `/calendar?year=${parsedDate.getUTCFullYear()}&month=${
     parsedDate.getUTCMonth() + 1
   }`;
+  const initialContent = await getEntryForDate(user.id, parsedDate);
 
   return (
     <main className="min-h-screen flex-1 bg-signup-background px-4 py-6 text-signup-text sm:px-6 lg:px-8">
@@ -45,7 +47,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
           <LogoutButton />
         </header>
 
-        <DiaryEditor date={date} />
+        <DiaryEditor date={date} initialContent={initialContent} />
       </div>
     </main>
   );
