@@ -5,14 +5,14 @@
 - Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and protected `/calendar` page are implemented.
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is protected with `requireUser()` and renders a real month calendar with month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. Diary pages, diary persistence, calendar diary-entry markers, and auto-save are still pending.
+- `/calendar` is protected with `requireUser()` and renders a real month calendar with month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. The protected `/diary/[date]` frontend page exists with date validation and an editable content field. Diary persistence, calendar diary-entry markers, and auto-save are still pending.
 - Tests cover auth validation, date route validation/parsing, password hashing, user auth helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, and the protected calendar page. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
 
 - Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
 - Calendar diary-entry markers have not been built.
-- Diary route pages and diary UI have not been built.
+- Diary persistence has not been connected to the diary page.
 - Diary database helper functions have not been implemented.
 - Diary validation helpers have not been implemented.
 - Auto-save behavior has not been implemented.
@@ -198,14 +198,18 @@ Pending behavior:
 
 Route: `/diary/[date]`
 
-- Pending.
+- Frontend implemented.
 
-Planned behavior:
+Implemented behavior:
 
 - Require authentication.
 - Validate the route date.
+- Render a diary editor for the selected date.
+- Show local ready/unsaved status and basic writing counts.
+
+Pending behavior:
+
 - Load the authenticated user's diary content for the selected date.
-- Show only an editable content field.
 - Auto-save content after edits.
 - Show save state: saving, saved, or error.
 - Create the entry on first auto-save if none exists.
@@ -287,7 +291,7 @@ Pending or needs update:
 1. Add diary validation helpers with tests.
 2. Add diary database helpers for loading, saving, and listing entry dates.
 3. Fetch calendar diary-entry dates in the protected server calendar flow and render entry markers.
-4. Build `/diary/[date]` with authenticated content loading.
+4. Build `/diary/[date]` with authenticated content loading. Frontend route and editor shell are implemented; authenticated content loading is still pending.
 5. Implement debounced diary auto-save with unit and component tests.
 6. Add diary API route handlers if the final auto-save design uses route handlers instead of server actions.
 7. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
