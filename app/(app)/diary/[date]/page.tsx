@@ -37,7 +37,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   return (
     <main className="min-h-screen flex-1 bg-signup-background px-4 py-6 text-signup-text sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex min-h-[4.5rem] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link
             href={calendarHref}
             className="inline-flex w-fit rounded-md border border-signup-input-border px-4 py-2 text-sm font-semibold text-signup-muted transition-colors hover:border-signup-primary hover:text-signup-primary focus:ring-3 focus:ring-signup-primary/25 focus:outline-none"

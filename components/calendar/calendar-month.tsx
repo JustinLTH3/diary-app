@@ -19,6 +19,10 @@ const dayLabelFormatter = new Intl.DateTimeFormat("en-US", {
 export function CalendarMonth({ year, month }: CalendarMonthProps) {
   const today = new Date();
   const todayDate = today.toLocaleDateString("en-CA");
+  const currentMonth = {
+    year: today.getFullYear(),
+    month: today.getMonth() + 1,
+  };
   const days = buildCalendarDays(year, month);
   const previousMonth = getRelativeMonth(year, month, -1);
   const nextMonth = getRelativeMonth(year, month, 1);
@@ -30,7 +34,6 @@ export function CalendarMonth({ year, month }: CalendarMonthProps) {
     >
       <div className="flex flex-col gap-4 border-b border-signup-divider pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-signup-primary">Calendar</p>
           <h1
             id="calendar-heading"
             className="font-serif text-3xl leading-tight font-semibold text-signup-text sm:text-4xl"
@@ -45,6 +48,12 @@ export function CalendarMonth({ year, month }: CalendarMonthProps) {
             className="rounded-md border border-signup-input-border px-4 py-2 text-sm font-semibold text-signup-muted transition-colors hover:border-signup-primary hover:text-signup-primary focus:ring-3 focus:ring-signup-primary/25 focus:outline-none"
           >
             Previous
+          </Link>
+          <Link
+            href={calendarHref(currentMonth.year, currentMonth.month)}
+            className="rounded-md border border-signup-input-border px-4 py-2 text-sm font-semibold text-signup-muted transition-colors hover:border-signup-primary hover:text-signup-primary focus:ring-3 focus:ring-signup-primary/25 focus:outline-none"
+          >
+            Today
           </Link>
           <Link
             href={calendarHref(nextMonth.year, nextMonth.month)}

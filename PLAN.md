@@ -5,7 +5,7 @@
 - Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and protected `/calendar` page are implemented.
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is protected with `requireUser()` and renders a real month calendar with month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
+- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
 - Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page, and diary editor auto-save states. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
@@ -177,7 +177,8 @@ Route protection:
 - Requires authentication through `requireUser()`.
 - Defaults to the current local month when query params are missing or invalid.
 - Supports `?year=YYYY&month=M`.
-- Renders month navigation, weekday labels, a full month grid, day links, today styling, and logout.
+- Renders previous/today/next month navigation, weekday labels, a full month grid, day links, today styling, and logout.
+- Uses the same protected-page shell width and header height as the diary edit page so the logout button aligns with the content box below.
 
 Implemented behavior:
 
@@ -185,6 +186,8 @@ Implemented behavior:
 - Show a month calendar.
 - Let the user select a date.
 - Clicking a day routes to `/diary/YYYY-MM-DD`.
+- Previous and next links move by one month.
+- Today links back to the current local month.
 
 Pending behavior:
 
@@ -207,6 +210,7 @@ Implemented behavior:
 - Show save state: saving, saved, or error.
 - Create the entry on first auto-save if none exists.
 - Show writing counts.
+- Uses the same protected-page shell width and header height as the calendar page so the logout button aligns with the editor box below.
 
 ## Auto-Save Behavior
 
@@ -261,7 +265,7 @@ Implemented:
 - Starter page smoke tests.
 - Signup page rendering, API-state, automatic signin, and `/calendar` redirect component tests.
 - Signin page rendering, session redirect, Auth.js submit, pending, invalid credential, and generic error component tests.
-- Protected calendar component tests for auth guard, default and selected months, day diary links, previous/next month navigation including year rollover, and logout.
+- Protected calendar component tests for auth guard, default and selected months, day diary links, previous/today/next month navigation including year rollover, and logout.
 - Auth validation tests.
 - Argon2 hash and verify helper tests.
 - User creation and credential verification helper tests.

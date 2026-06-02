@@ -73,6 +73,10 @@ describe("CalendarPage", () => {
       "href",
       "/calendar?year=2026&month=4",
     );
+    expect(screen.getByRole("link", { name: "Today" })).toHaveAttribute(
+      "href",
+      "/calendar?year=2026&month=5",
+    );
     expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
       "href",
       "/calendar?year=2026&month=6",
