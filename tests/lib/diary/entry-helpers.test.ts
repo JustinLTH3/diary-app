@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
   diaryEntry: {
+    findMany: vi.fn(),
     findUnique: vi.fn(),
     upsert: vi.fn(),
   },
@@ -12,6 +13,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { getEntryForDate } from "@/lib/diary/getEntryForDate";
+import { listEntryDatesForMonth } from "@/lib/diary/listEntryDatesForMonth";
 import { saveEntryContent } from "@/lib/diary/saveEntryContent";
 
 describe("diary entry helpers", () => {
@@ -79,6 +81,37 @@ describe("diary entry helpers", () => {
         date: true,
         content: true,
         updatedAt: true,
+      },
+    });
+  });
+
+  it("lists non-empty entry dates for a user in a selected month", async () => {
+    prismaMock.diaryEntry.findMany.mockResolvedValue([
+      { date: new Date("2026-05-01T00:00:00.000Z") },
+      { date: new Date("2026-05-29T00:00:00.000Z") },
+    ]);
+
+    await expect(listEntryDatesForMonth("user_1", 2026, 5)).resolves.toEqual([
+      "2026-05-01",
+      "2026-05-29",
+    ]);
+
+    expect(prismaMock.diaryEntry.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user_1",
+        content: {
+          not: "",
+        },
+        date: {
+          gte: new Date("2026-05-01T00:00:00.000Z"),
+          lt: new Date("2026-06-01T00:00:00.000Z"),
+        },
+      },
+      select: {
+        date: true,
+      },
+      orderBy: {
+        date: "asc",
       },
     });
   });

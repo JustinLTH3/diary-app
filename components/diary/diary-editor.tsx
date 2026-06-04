@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useDiaryUnsavedChanges } from "@/components/diary/diary-unsaved-changes";
 import { diaryContentMaxLength } from "@/lib/validation/diary";
 
 type DiaryEditorProps = {
@@ -26,6 +27,7 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
   const lastSavedContentRef = useRef(initialContent);
   const saveRequestIdRef = useRef(0);
   const remainingCharacters = diaryContentMaxLength - content.length;
+  const { setHasUnsavedChanges } = useDiaryUnsavedChanges();
 
   useEffect(() => {
     setContent(initialContent);
@@ -33,7 +35,12 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
     contentRef.current = initialContent;
     lastSavedContentRef.current = initialContent;
     saveRequestIdRef.current += 1;
-  }, [date, initialContent]);
+    setHasUnsavedChanges(false);
+  }, [date, initialContent, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    return () => setHasUnsavedChanges(false);
+  }, [setHasUnsavedChanges]);
 
   const saveContent = useCallback(
     async (nextContent: string) => {
@@ -69,6 +76,7 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
         }
 
         lastSavedContentRef.current = nextContent;
+        setHasUnsavedChanges(contentRef.current !== nextContent);
         setSaveStatus(contentRef.current === nextContent ? "saved" : "unsaved");
       } catch {
         if (saveRequestIdRef.current === requestId) {
@@ -153,6 +161,7 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
 
             setContent(nextContent);
             contentRef.current = nextContent;
+            setHasUnsavedChanges(nextContent !== lastSavedContentRef.current);
             setSaveStatus(nextContent === lastSavedContentRef.current ? "ready" : "unsaved");
           }}
           placeholder="Start writing..."

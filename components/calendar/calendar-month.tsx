@@ -3,6 +3,7 @@ import Link from "next/link";
 type CalendarMonthProps = {
   year: number;
   month: number;
+  entryDates: string[];
 };
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,9 +17,10 @@ const dayLabelFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-export function CalendarMonth({ year, month }: CalendarMonthProps) {
+export function CalendarMonth({ year, month, entryDates }: CalendarMonthProps) {
   const today = new Date();
   const todayDate = today.toLocaleDateString("en-CA");
+  const entryDateSet = new Set(entryDates);
   const currentMonth = {
     year: today.getFullYear(),
     month: today.getMonth() + 1,
@@ -88,6 +90,7 @@ export function CalendarMonth({ year, month }: CalendarMonthProps) {
           const date = new Date(year, month - 1, day);
           const dateKey = date.toLocaleDateString("en-CA");
           const isToday = dateKey === todayDate;
+          const hasEntry = entryDateSet.has(dateKey);
 
           return (
             <Link
@@ -97,14 +100,23 @@ export function CalendarMonth({ year, month }: CalendarMonthProps) {
               aria-label={`${isToday ? "Today, " : ""}${dayLabelFormatter.format(date)}`}
               className="group relative flex min-h-20 flex-col bg-signup-card p-2 text-sm text-signup-text transition-colors hover:bg-signup-background focus:z-10 focus:ring-3 focus:ring-signup-primary/25 focus:outline-none sm:min-h-24 sm:p-3"
             >
-              <span
-                className={
-                  isToday
-                    ? "flex size-8 items-center justify-center rounded-full bg-signup-primary text-sm font-semibold text-signup-on-primary"
-                    : "flex size-8 items-center justify-center rounded-full text-sm font-semibold text-signup-text group-hover:text-signup-primary"
-                }
-              >
-                {day}
+              <span className="flex items-center gap-2">
+                <span
+                  className={
+                    isToday
+                      ? "flex size-8 items-center justify-center rounded-full bg-signup-primary text-sm font-semibold text-signup-on-primary"
+                      : "flex size-8 items-center justify-center rounded-full text-sm font-semibold text-signup-text group-hover:text-signup-primary"
+                  }
+                >
+                  {day}
+                </span>
+                {hasEntry ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid={`entry-marker-${dateKey}`}
+                    className="size-1.5 rounded-full bg-signup-primary/70"
+                  />
+                ) : null}
               </span>
             </Link>
           );
