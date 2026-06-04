@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { expect, type Page } from "@playwright/test";
 import { Client } from "pg";
 
 const e2eEmailDomain = "example.com";
@@ -23,6 +24,14 @@ export function createE2eEmail() {
   const uniqueId = randomUUID().replaceAll("-", "").slice(0, 12);
 
   return `${e2eEmailPrefix}-${Date.now()}-${uniqueId}@${e2eEmailDomain}`;
+}
+
+export async function signUpThroughUi(page: Page, account: E2eAccountCredentials) {
+  await page.goto("/signup");
+  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Password").fill(account.password);
+  await page.getByRole("button", { name: "Create Account" }).click();
+  await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
 }
 
 export async function deleteE2eUserByEmail(email: string) {

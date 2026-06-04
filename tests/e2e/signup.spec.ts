@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+import {
+  createE2eAccountCredentials,
+  deleteE2eUserByEmail,
+  signUpThroughUi,
+} from "./support/test-accounts";
+
 test("renders the signup page", async ({ page }) => {
   await page.goto("/signup");
 
@@ -8,4 +14,20 @@ test("renders the signup page", async ({ page }) => {
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create Account" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/signin");
+});
+
+test("signs up a new user and lands on the calendar", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+
+    await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
+    await expect(page.getByText("Choose a day to open your entry.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
 });
