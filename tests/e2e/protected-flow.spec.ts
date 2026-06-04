@@ -147,6 +147,111 @@ test("marks saved diary dates on the calendar", async ({ page }) => {
   }
 });
 
+test("logs out from the calendar and redirects to signin", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+
+    await page.getByRole("button", { name: "Log out" }).click();
+
+    await expect(page).toHaveURL(/\/signin(?:\?|$)/);
+    await expect(page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("logs out from a saved diary date and redirects to signin", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+  const content = "E2E saved diary content.";
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+    await saveDiaryContent(page, content);
+
+    await page.getByRole("button", { name: "Log out" }).click();
+
+    await expect(page).toHaveURL(/\/signin(?:\?|$)/);
+    await expect(page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("signs back in and restores calendar access", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.getByRole("button", { name: "Log out" }).click();
+    await expect(page).toHaveURL(/\/signin(?:\?|$)/);
+
+    await signInThroughUi(page, account);
+
+    await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
+    await expect(page.getByText("Choose a day to open your entry.")).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("signs back in and reopens saved diary content", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+  const content = "E2E saved diary content.";
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+    await saveDiaryContent(page, content);
+    await page.getByRole("button", { name: "Log out" }).click();
+    await expect(page).toHaveURL(/\/signin(?:\?|$)/);
+
+    await signInThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+
+    await expect(page.getByLabel("Diary entry")).toHaveValue(content);
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("shows invalid signin feedback without entering the app", async ({ page }) => {
+  await page.goto("/signin");
+  await page.getByLabel("Email").fill("missing@example.com");
+  await page.getByLabel("Password").fill("password123");
+  await page.getByRole("button", { name: "Sign In" }).click();
+
+  await expect(page).toHaveURL(/\/signin(?:\?|$)/);
+  await expect(page.getByText("Invalid email or password.")).toBeVisible();
+  await expect(page.getByText("Choose a day to open your entry.")).toBeHidden();
+});
+
+test("returns not found for authenticated invalid diary dates", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+
+    const response = await page.goto("/diary/not-a-date");
+
+    expect(response?.status()).toBe(404);
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
 async function signUpThroughUi(
   page: Page,
   account: ReturnType<typeof createE2eAccountCredentials>,
@@ -155,6 +260,17 @@ async function signUpThroughUi(
   await page.getByLabel("Email").fill(account.email);
   await page.getByLabel("Password").fill(account.password);
   await page.getByRole("button", { name: "Create Account" }).click();
+  await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
+}
+
+async function signInThroughUi(
+  page: Page,
+  account: ReturnType<typeof createE2eAccountCredentials>,
+) {
+  await page.goto("/signin");
+  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Password").fill(account.password);
+  await page.getByRole("button", { name: "Sign In" }).click();
   await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
 }
 

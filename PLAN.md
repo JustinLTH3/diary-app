@@ -6,12 +6,12 @@
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
 - `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, diary-entry markers, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, auto-saves edits through `POST /api/diary`, and guards in-app exits such as Back to calendar and logout when there is unsaved content.
-- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, diary editor auto-save states, and diary unsaved-exit confirmation behavior. E2E coverage now includes smoke/signup rendering, unauthenticated protected-route redirects, signup-to-calendar, calendar navigation/date links, opening a diary date from the calendar, and empty diary content for a new date.
+- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, diary editor auto-save states, and diary unsaved-exit confirmation behavior. E2E coverage now includes smoke/signup rendering, unauthenticated protected-route redirects, signup-to-calendar, calendar navigation/date links, diary editing and persistence, calendar entry markers, logout, signin recovery, invalid signin feedback, and authenticated invalid diary date handling.
 
 ## Known Gaps
 
 - Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
-- Full signup-signin-calendar-diary persistence/logout/signin-recovery E2E coverage has not been implemented.
+- Full signup-signin-calendar-diary E2E coverage is implemented; future E2E additions should track newly added user-facing workflows.
 
 ## Stack
 
@@ -278,14 +278,13 @@ Implemented:
 - Calendar diary-date marker tests.
 - Signup page rendering E2E test.
 - E2E account helper for generated test credentials and database cleanup.
-- Protected-flow E2E tests for unauthenticated `/calendar` and `/diary/YYYY-MM-DD` redirects, signup-to-calendar, calendar navigation/date links, opening a diary date from the calendar, and empty content for a new diary date.
+- Protected-flow E2E tests for unauthenticated `/calendar` and `/diary/YYYY-MM-DD` redirects, signup-to-calendar, calendar navigation/date links, opening a diary date from the calendar, empty content for a new diary date, diary auto-save, saved-content reload, calendar entry markers, logout, signin recovery, invalid signin feedback, and authenticated invalid diary date behavior.
 
 Pending or needs update:
 
-- Full E2E flow continuation: write diary content, auto-save, reload saved content, show the calendar diary-entry marker, log out, sign back in, and confirm saved content.
-- E2E coverage for invalid signin credentials and authenticated invalid diary date behavior.
+- Add E2E coverage for future user-facing workflows as they are introduced.
 
 ## Implementation Order
 
-1. Continue E2E coverage for diary editing, persistence, logout, signin recovery, invalid signin, and invalid diary date behavior.
+1. Keep E2E coverage aligned with future user-facing workflows.
 2. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
