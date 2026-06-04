@@ -22,6 +22,43 @@ vi.mock("next-auth/react", () => ({
   signOut: signOutMock,
 }));
 
+vi.mock("next/link", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+
+  return {
+    default: ({
+      children,
+      href,
+      onNavigate,
+      ...props
+    }: {
+      children: React.ReactNode;
+      href: string;
+      onNavigate?: (event: { preventDefault: () => void }) => void;
+    }) =>
+      React.createElement(
+        "a",
+        {
+          ...props,
+          href,
+          onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+            let navigationPrevented = false;
+
+            onNavigate?.({
+              preventDefault: () => {
+                navigationPrevented = true;
+              },
+            });
+
+            event.currentTarget.dataset.navigationPrevented = String(navigationPrevented);
+            event.preventDefault();
+          },
+        },
+        children,
+      ),
+  };
+});
+
 vi.mock("next/navigation", async (importOriginal) => {
   const actual = await importOriginal<typeof import("next/navigation")>();
 
@@ -43,6 +80,7 @@ describe("DiaryPage", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -92,6 +130,63 @@ describe("DiaryPage", () => {
 
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
     expect(screen.getByText("3 words")).toBeInTheDocument();
+  });
+
+  it("does not prompt before returning to the calendar when content is unchanged", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm");
+
+    render(
+      await DiaryPage({
+        params: Promise.resolve({ date: "2026-05-29" }),
+      }),
+    );
+
+    await user.click(screen.getByRole("link", { name: "Back to calendar" }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("prevents returning to the calendar when unsaved content exists and the user cancels", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      await DiaryPage({
+        params: Promise.resolve({ date: "2026-05-29" }),
+      }),
+    );
+
+    fireEvent.change(screen.getByLabelText("Diary entry"), {
+      target: { value: "A quiet day." },
+    });
+
+    const backLink = screen.getByRole("link", { name: "Back to calendar" });
+
+    fireEvent.click(backLink);
+
+    expect(confirmSpy).toHaveBeenCalledWith("You have unsaved changes. Leave anyway?");
+    expect(backLink).toHaveAttribute("data-navigation-prevented", "true");
+  });
+
+  it("allows returning to the calendar when unsaved content exists and the user confirms", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(
+      await DiaryPage({
+        params: Promise.resolve({ date: "2026-05-29" }),
+      }),
+    );
+
+    fireEvent.change(screen.getByLabelText("Diary entry"), {
+      target: { value: "A quiet day." },
+    });
+
+    const backLink = screen.getByRole("link", { name: "Back to calendar" });
+
+    fireEvent.click(backLink);
+
+    expect(confirmSpy).toHaveBeenCalledWith("You have unsaved changes. Leave anyway?");
+    expect(backLink).toHaveAttribute("data-navigation-prevented", "false");
   });
 
   it("debounces auto-save after editing content", async () => {
@@ -227,6 +322,40 @@ describe("DiaryPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Log out" }));
 
+    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/signin" });
+  });
+
+  it("does not sign out when unsaved content exists and the user cancels", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      await DiaryPage({
+        params: Promise.resolve({ date: "2026-05-29" }),
+      }),
+    );
+
+    await user.type(screen.getByLabelText("Diary entry"), "A quiet day.");
+    await user.click(screen.getByRole("button", { name: "Log out" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith("You have unsaved changes. Leave anyway?");
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it("signs out when unsaved content exists and the user confirms", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(
+      await DiaryPage({
+        params: Promise.resolve({ date: "2026-05-29" }),
+      }),
+    );
+
+    await user.type(screen.getByLabelText("Diary entry"), "A quiet day.");
+    await user.click(screen.getByRole("button", { name: "Log out" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith("You have unsaved changes. Leave anyway?");
     expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/signin" });
   });
 });

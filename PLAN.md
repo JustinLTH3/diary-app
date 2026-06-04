@@ -5,8 +5,8 @@
 - Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and protected `/calendar` page are implemented.
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, diary-entry markers, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
-- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, and diary editor auto-save states. E2E coverage is still limited to smoke/signup rendering.
+- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, diary-entry markers, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, auto-saves edits through `POST /api/diary`, and guards in-app exits such as Back to calendar and logout when there is unsaved content.
+- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, diary editor auto-save states, and diary unsaved-exit confirmation behavior. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
 
@@ -58,6 +58,8 @@ components/
   calendar/
     calendar-month.tsx
   diary/
+    diary-editor.tsx
+    diary-unsaved-changes.tsx
 lib/
   auth/
     createUser.ts
@@ -209,6 +211,9 @@ Implemented behavior:
 - Create the entry on first auto-save if none exists.
 - Show writing counts.
 - Uses the same protected-page shell width and header height as the calendar page so the logout button aligns with the editor box below.
+- Shows a confirmation prompt before returning to the calendar when the current content differs from the last successful save.
+- Shows the same confirmation prompt before logout when the current content differs from the last successful save.
+- Keeps the browser unload prompt active for refresh, tab close, and other document unloads with unsaved content.
 
 ## Auto-Save Behavior
 
@@ -219,7 +224,8 @@ Implemented behavior:
 - Save requests are idempotent through an upsert by `userId + date`.
 - Failed saves show a non-blocking error state and retry on the next edit.
 - Unchanged content is not saved.
-- Closing or leaving the page triggers a best-effort final save attempt when there are unsaved changes and asks the browser to show an unsaved-changes confirmation prompt.
+- Refresh, tab close, and other document unloads trigger a best-effort final save attempt when there are unsaved changes and ask the browser to show an unsaved-changes confirmation prompt.
+- In-app exits from the diary page, including Back to calendar and logout, use `window.confirm` when the current content differs from the last successful save.
 
 ## Server Logic
 
@@ -271,6 +277,7 @@ Implemented:
 - Diary save route tests.
 - Diary editor render and save-state tests.
 - Debounced auto-save tests.
+- Diary unsaved-exit tests for Back to calendar and logout confirmation, cancel, and allow behavior.
 - Calendar diary-date marker tests.
 - Signup page rendering E2E test.
 
