@@ -2,20 +2,17 @@
 
 ## Current Status
 
-- Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and temporary protected `/calendar` page are implemented.
+- Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and protected `/calendar` page are implemented.
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is protected with `requireUser()` but still only renders a temporary authenticated-success screen with logout; real calendar UI, diary pages, diary persistence, and auto-save are still pending.
-- Tests cover auth validation, password hashing, user auth helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, and the temporary protected calendar/logout page. E2E coverage is still limited to smoke/signup rendering.
+- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
+- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page, and diary editor auto-save states. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
 
 - Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
-- The real calendar UI has not been built.
-- Diary route pages and diary UI have not been built.
-- Diary database helper functions have not been implemented.
-- Date parsing and diary validation helpers have not been implemented.
-- Auto-save behavior has not been implemented.
+- Calendar diary-entry markers have not been built.
+- `listEntryDatesForMonth` has not been implemented.
 - Full signup-signin-calendar-diary E2E coverage has not been implemented.
 
 ## Stack
@@ -41,8 +38,8 @@ app/
       page.tsx
   (app)/
     calendar/
-      page.tsx                      # protected temporary success/logout screen
-    diary/                          # pending
+      page.tsx                      # protected month calendar screen
+    diary/
       [date]/
         page.tsx
   api/
@@ -51,16 +48,17 @@ app/
         route.ts
       signup/
         route.ts
-    diary/                          # pending
+    diary/
       route.ts
       dates/
-        route.ts
+        route.ts                    # pending
 components/
   auth/
     logout-button.tsx
     signin-form.tsx
     signup-form.tsx
   calendar/
+    calendar-month.tsx
   diary/
 lib/
   auth/
@@ -74,10 +72,9 @@ lib/
   diary/
     getEntryForDate.ts
     saveEntryContent.ts
-    listEntryDatesForMonth.ts
+    listEntryDatesForMonth.ts       # pending
   dates/
     parseDiaryDate.ts
-    formatDiaryDate.ts
   validation/
     auth.ts
     diary.ts
@@ -176,46 +173,55 @@ Route protection:
 
 ### Calendar Page
 
-- Temporary implementation exists at `/calendar`.
+- Implemented at `/calendar`.
 - Requires authentication through `requireUser()`.
-- Currently renders a success heading and logout button for authenticated users.
-- Real month calendar behavior remains pending.
+- Defaults to the current local month when query params are missing or invalid.
+- Supports `?year=YYYY&month=M`.
+- Renders previous/today/next month navigation, weekday labels, a full month grid, day links, today styling, and logout.
+- Uses the same protected-page shell width and header height as the diary edit page so the logout button aligns with the content box below.
 
-Planned behavior:
+Implemented behavior:
 
 - Require authentication.
 - Show a month calendar.
 - Let the user select a date.
 - Clicking a day routes to `/diary/YYYY-MM-DD`.
+- Previous and next links move by one month.
+- Today links back to the current local month.
+
+Pending behavior:
+
 - Mark days that already have diary content.
+- Diary-entry dates should be fetched in the protected server calendar flow after `requireUser()` resolves the user, once `listEntryDatesForMonth` exists. They should not be passed as a public prop to the calendar component.
 
 ### Diary Page
 
 Route: `/diary/[date]`
 
-- Pending.
+- Frontend implemented.
 
-Planned behavior:
+Implemented behavior:
 
 - Require authentication.
 - Validate the route date.
+- Render a diary editor for the selected date.
 - Load the authenticated user's diary content for the selected date.
-- Show only an editable content field.
 - Auto-save content after edits.
 - Show save state: saving, saved, or error.
 - Create the entry on first auto-save if none exists.
+- Show writing counts.
+- Uses the same protected-page shell width and header height as the calendar page so the logout button aligns with the editor box below.
 
 ## Auto-Save Behavior
 
-- Pending.
-- The editor should keep local content state.
-- Changes should trigger a debounced save after 1 second of no editing.
-- Auto-save should only run if content changed since the last successful save.
-- Save requests should be idempotent using an upsert by `userId + date`.
-- Failed saves should show a non-blocking error state and retry on the next edit.
-- Unchanged content should not be saved.
-- Closing or leaving the page should trigger a final save attempt when there are unsaved changes.
-- If the final save fails, show a confirmation prompt before quitting with unsaved content.
+- Implemented through `components/diary/diary-editor.tsx` and `POST /api/diary`.
+- The editor keeps local content state.
+- Changes trigger a debounced save after 1 second of no editing.
+- Auto-save only runs if content changed since the last successful save.
+- Save requests are idempotent through an upsert by `userId + date`.
+- Failed saves show a non-blocking error state and retry on the next edit.
+- Unchanged content is not saved.
+- Closing or leaving the page triggers a best-effort final save attempt when there are unsaved changes and asks the browser to show an unsaved-changes confirmation prompt.
 
 ## Server Logic
 
@@ -226,14 +232,17 @@ Implemented:
 - `hashPassword(password)`
 - `verifyPassword(hash, password)`
 - `requireUser()`
+- `parseDiaryDate(value)`
+- `getEntryForDate(userId, date)`
+- `saveEntryContent(userId, date, content)`
+- `POST /api/diary`
+- Protected calendar month rendering and navigation.
 
 Pending:
 
-- `getEntryForDate(userId, date)`
-- `saveEntryContent(userId, date, content)`
 - `listEntryDatesForMonth(userId, year, month)`
-- `parseDiaryDate(value)`
-- `formatDiaryDate(date)`
+
+Note: shared date-to-string formatting is intentionally not planned. UI display formatting should stay local to components, such as the existing `Intl.DateTimeFormat` usage in `CalendarMonth`.
 
 ## Validation
 
@@ -242,11 +251,11 @@ Implemented:
 - Email format.
 - Email trimming and lowercasing.
 - Password minimum length.
+- Date route format: `YYYY-MM-DD`.
+- Diary content maximum length.
 
 Pending:
 
-- Date route format: `YYYY-MM-DD`.
-- Diary content maximum length.
 - Month/year query validation for calendar entry markers.
 
 ## Testing Plan
@@ -256,34 +265,29 @@ Implemented:
 - Starter page smoke tests.
 - Signup page rendering, API-state, automatic signin, and `/calendar` redirect component tests.
 - Signin page rendering, session redirect, Auth.js submit, pending, invalid credential, and generic error component tests.
-- Temporary protected calendar/logout component tests.
+- Protected calendar component tests for auth guard, default and selected months, day diary links, previous/today/next month navigation including year rollover, and logout.
 - Auth validation tests.
 - Argon2 hash and verify helper tests.
 - User creation and credential verification helper tests.
 - Auth.js session helper tests for `requireUser()`.
 - Signup route tests.
 - Auth.js provider and JWT/session callback tests.
+- Date parsing and route validation tests.
+- Diary validation tests.
+- Diary database helper tests.
+- Diary save route tests.
+- Diary editor render and save-state tests.
+- Debounced auto-save tests.
 - Signup page rendering E2E test.
 
 Pending or needs update:
 
-- Date parsing and formatting tests.
-- Diary validation tests.
-- Diary database helper tests.
-- Calendar month rendering tests.
 - Calendar diary-date marker tests.
-- Diary editor render and save-state tests.
-- Debounced auto-save tests.
 - Full E2E flow: sign up, land on calendar, select a date, write diary content, auto-save, sign out, sign back in, and confirm saved content.
 
 ## Implementation Order
 
-1. Replace the temporary calendar success page with the real protected month calendar UI and component tests.
-2. Add date parsing, date formatting, and date validation helpers with tests.
-3. Add diary validation helpers with tests.
-4. Add diary database helpers for loading, saving, and listing entry dates.
-5. Build `/diary/[date]` with authenticated content loading.
-6. Implement debounced diary auto-save with unit and component tests.
-7. Add diary API route handlers if the final auto-save design uses route handlers instead of server actions.
-8. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
-9. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
+1. Fetch calendar diary-entry dates in the protected server calendar flow and render entry markers.
+2. Add `listEntryDatesForMonth(userId, year, month)` with tests.
+3. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
+4. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
