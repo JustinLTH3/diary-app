@@ -1,9 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
-import {
-  createE2eAccountCredentials,
-  deleteE2eUserByEmail,
-} from "./support/test-accounts";
+import { createE2eAccountCredentials, deleteE2eUserByEmail } from "./support/test-accounts";
 
 test("redirects unauthenticated calendar access to signin", async ({ page }) => {
   await page.goto("/calendar");
@@ -25,10 +22,7 @@ test("signs up a new user and lands on the calendar", async ({ page }) => {
   await deleteE2eUserByEmail(account.email);
 
   try {
-    await page.goto("/signup");
-    await page.getByLabel("Email").fill(account.email);
-    await page.getByLabel("Password").fill(account.password);
-    await page.getByRole("button", { name: "Create Account" }).click();
+    await signUpThroughUi(page, account);
 
     await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
     await expect(page.getByText("Choose a day to open your entry.")).toBeVisible();
@@ -37,3 +31,134 @@ test("signs up a new user and lands on the calendar", async ({ page }) => {
     await deleteE2eUserByEmail(account.email);
   }
 });
+
+test("shows calendar month navigation and diary date links", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/calendar?year=2026&month=5");
+
+    await expect(page.getByRole("heading", { name: "May 2026" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Previous" })).toHaveAttribute(
+      "href",
+      "/calendar?year=2026&month=4",
+    );
+    await expect(page.getByRole("link", { name: "Today" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Next" })).toHaveAttribute(
+      "href",
+      "/calendar?year=2026&month=6",
+    );
+    await expect(page.getByRole("link", { name: "May 29, 2026" })).toHaveAttribute(
+      "href",
+      "/diary/2026-05-29",
+    );
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("opens a diary date from the calendar", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/calendar?year=2026&month=5");
+    await page.getByRole("link", { name: "May 29, 2026" }).click();
+
+    await expect(page).toHaveURL(/\/diary\/2026-05-29$/);
+    await expect(page.getByRole("heading", { name: "Friday, 29 May 2026" })).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("loads empty content for a new diary date", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+
+    await expect(page.getByLabel("Diary entry")).toBeVisible();
+    await expect(page.getByLabel("Diary entry")).toHaveValue("");
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("auto-saves diary content after editing", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+  const content = "E2E saved diary content.";
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+
+    await saveDiaryContent(page, content);
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("reloads saved content for the same diary date", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+  const content = "E2E saved diary content.";
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+    await saveDiaryContent(page, content);
+
+    await page.reload();
+
+    await expect(page.getByLabel("Diary entry")).toHaveValue(content);
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+test("marks saved diary dates on the calendar", async ({ page }) => {
+  const account = createE2eAccountCredentials();
+  const content = "E2E saved diary content.";
+
+  await deleteE2eUserByEmail(account.email);
+
+  try {
+    await signUpThroughUi(page, account);
+    await page.goto("/diary/2026-05-29");
+    await saveDiaryContent(page, content);
+
+    await page.goto("/calendar?year=2026&month=5");
+
+    await expect(page.getByTestId("entry-marker-2026-05-29")).toBeVisible();
+  } finally {
+    await deleteE2eUserByEmail(account.email);
+  }
+});
+
+async function signUpThroughUi(
+  page: Page,
+  account: ReturnType<typeof createE2eAccountCredentials>,
+) {
+  await page.goto("/signup");
+  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Password").fill(account.password);
+  await page.getByRole("button", { name: "Create Account" }).click();
+  await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
+}
+
+async function saveDiaryContent(page: Page, content: string) {
+  await page.getByLabel("Diary entry").fill(content);
+  await expect(page.getByText(/^Saved$/)).toBeVisible();
+}
