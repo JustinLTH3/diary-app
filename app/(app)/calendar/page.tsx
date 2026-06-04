@@ -1,14 +1,16 @@
 import { LogoutButton } from "@/components/auth/logout-button";
 import { CalendarMonth } from "@/components/calendar/calendar-month";
 import { requireUser } from "@/lib/auth/requireUser";
+import { listEntryDatesForMonth } from "@/lib/diary/listEntryDatesForMonth";
 
 type CalendarPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps = {}) {
-  await requireUser();
+  const user = await requireUser();
   const selectedMonth = getSelectedMonth(searchParams ? await searchParams : {});
+  const entryDates = await listEntryDatesForMonth(user.id, selectedMonth.year, selectedMonth.month);
 
   return (
     <main className="min-h-screen flex-1 bg-signup-background px-4 py-6 text-signup-text sm:px-6 lg:px-8">
@@ -21,7 +23,11 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps =
           <LogoutButton />
         </header>
 
-        <CalendarMonth year={selectedMonth.year} month={selectedMonth.month} />
+        <CalendarMonth
+          year={selectedMonth.year}
+          month={selectedMonth.month}
+          entryDates={entryDates}
+        />
       </div>
     </main>
   );

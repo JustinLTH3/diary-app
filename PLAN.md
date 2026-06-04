@@ -5,14 +5,12 @@
 - Base app, tooling, Prisma 7/PostgreSQL schema, initial migration, Auth.js Credentials configuration, auth helpers, signup route, signup page, signin page, server-side `requireUser()` helper, and protected `/calendar` page are implemented.
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
-- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
-- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page, and diary editor auto-save states. E2E coverage is still limited to smoke/signup rendering.
+- `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, diary-entry markers, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, and auto-saves edits through `POST /api/diary`.
+- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, and diary editor auto-save states. E2E coverage is still limited to smoke/signup rendering.
 
 ## Known Gaps
 
 - Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
-- Calendar diary-entry markers have not been built.
-- `listEntryDatesForMonth` has not been implemented.
 - Full signup-signin-calendar-diary E2E coverage has not been implemented.
 
 ## Stack
@@ -72,7 +70,7 @@ lib/
   diary/
     getEntryForDate.ts
     saveEntryContent.ts
-    listEntryDatesForMonth.ts       # pending
+    listEntryDatesForMonth.ts
   dates/
     parseDiaryDate.ts
   validation/
@@ -192,7 +190,7 @@ Implemented behavior:
 Pending behavior:
 
 - Mark days that already have diary content.
-- Diary-entry dates should be fetched in the protected server calendar flow after `requireUser()` resolves the user, once `listEntryDatesForMonth` exists. They should not be passed as a public prop to the calendar component.
+- Diary-entry dates are fetched in the protected server calendar flow after `requireUser()` resolves the user.
 
 ### Diary Page
 
@@ -235,12 +233,9 @@ Implemented:
 - `parseDiaryDate(value)`
 - `getEntryForDate(userId, date)`
 - `saveEntryContent(userId, date, content)`
+- `listEntryDatesForMonth(userId, year, month)`
 - `POST /api/diary`
 - Protected calendar month rendering and navigation.
-
-Pending:
-
-- `listEntryDatesForMonth(userId, year, month)`
 
 Note: shared date-to-string formatting is intentionally not planned. UI display formatting should stay local to components, such as the existing `Intl.DateTimeFormat` usage in `CalendarMonth`.
 
@@ -254,9 +249,7 @@ Implemented:
 - Date route format: `YYYY-MM-DD`.
 - Diary content maximum length.
 
-Pending:
-
-- Month/year query validation for calendar entry markers.
+Pending: none.
 
 ## Testing Plan
 
@@ -278,16 +271,14 @@ Implemented:
 - Diary save route tests.
 - Diary editor render and save-state tests.
 - Debounced auto-save tests.
+- Calendar diary-date marker tests.
 - Signup page rendering E2E test.
 
 Pending or needs update:
 
-- Calendar diary-date marker tests.
 - Full E2E flow: sign up, land on calendar, select a date, write diary content, auto-save, sign out, sign back in, and confirm saved content.
 
 ## Implementation Order
 
-1. Fetch calendar diary-entry dates in the protected server calendar flow and render entry markers.
-2. Add `listEntryDatesForMonth(userId, year, month)` with tests.
-3. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
-4. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
+1. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
+2. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
