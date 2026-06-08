@@ -30,15 +30,6 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
   const { setHasUnsavedChanges } = useDiaryUnsavedChanges();
 
   useEffect(() => {
-    setContent(initialContent);
-    setSaveStatus("ready");
-    contentRef.current = initialContent;
-    lastSavedContentRef.current = initialContent;
-    saveRequestIdRef.current += 1;
-    setHasUnsavedChanges(false);
-  }, [date, initialContent, setHasUnsavedChanges]);
-
-  useEffect(() => {
     return () => setHasUnsavedChanges(false);
   }, [setHasUnsavedChanges]);
 
@@ -84,7 +75,7 @@ export function DiaryEditor({ date, initialContent = "" }: DiaryEditorProps) {
         }
       }
     },
-    [date],
+    [date, setHasUnsavedChanges],
   );
 
   useEffect(() => {

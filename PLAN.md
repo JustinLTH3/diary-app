@@ -6,12 +6,12 @@
 - Signup posts to `POST /api/auth/signup`, attempts automatic Auth.js signin after successful signup, and redirects to `/calendar`.
 - Signin is functional through Auth.js, redirects authenticated users away from `/signin`, and sends successful signins to `/calendar`.
 - `/calendar` is protected with `requireUser()` and renders a real month calendar with previous/today/next month navigation, day links to `/diary/YYYY-MM-DD`, today styling, diary-entry markers, and logout. The protected `/diary/[date]` page validates the route date, loads saved content for the authenticated user, auto-saves edits through `POST /api/diary`, and guards in-app exits such as Back to calendar and logout when there is unsaved content.
-- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, diary editor auto-save states, and diary unsaved-exit confirmation behavior. E2E coverage is still limited to smoke/signup rendering.
+- Tests cover auth validation, date route validation/parsing, diary validation, password hashing, user auth helpers, diary database helpers including month entry-date listing, Auth.js callbacks/provider behavior, signup route/form states including automatic signin and redirect, signin flow states, `requireUser()`, the diary save route, the protected calendar page including diary-entry markers, diary editor auto-save states, and diary unsaved-exit confirmation behavior. E2E coverage now includes smoke/signup rendering, unauthenticated protected-route redirects, signup-to-calendar, calendar navigation/date links, diary editing and persistence, calendar entry markers, logout, signin recovery, invalid signin feedback, and authenticated invalid diary date handling.
 
 ## Known Gaps
 
 - Future protected app pages still need to call `requireUser()` close to their server-side page/data loading.
-- Full signup-signin-calendar-diary E2E coverage has not been implemented.
+- Full signup-signin-calendar-diary E2E coverage is implemented; future E2E additions should track newly added user-facing workflows.
 
 ## Stack
 
@@ -188,9 +188,6 @@ Implemented behavior:
 - Clicking a day routes to `/diary/YYYY-MM-DD`.
 - Previous and next links move by one month.
 - Today links back to the current local month.
-
-Pending behavior:
-
 - Mark days that already have diary content.
 - Diary-entry dates are fetched in the protected server calendar flow after `requireUser()` resolves the user.
 
@@ -280,12 +277,14 @@ Implemented:
 - Diary unsaved-exit tests for Back to calendar and logout confirmation, cancel, and allow behavior.
 - Calendar diary-date marker tests.
 - Signup page rendering E2E test.
+- E2E account helper for generated test credentials and database cleanup.
+- Protected-flow E2E tests for unauthenticated `/calendar` and `/diary/YYYY-MM-DD` redirects, signup-to-calendar, calendar navigation/date links, opening a diary date from the calendar, empty content for a new diary date, diary auto-save, saved-content reload, calendar entry markers, logout, signin recovery, invalid signin feedback, and authenticated invalid diary date behavior.
 
 Pending or needs update:
 
-- Full E2E flow: sign up, land on calendar, select a date, write diary content, auto-save, sign out, sign back in, and confirm saved content.
+- Add E2E coverage for future user-facing workflows as they are introduced.
 
 ## Implementation Order
 
-1. Add full E2E coverage for signup, signin, protected calendar access, diary editing, persistence, logout, and signin recovery.
+1. Keep E2E coverage aligned with future user-facing workflows.
 2. Re-run `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run format:check`, `npm.cmd run test`, and `npm.cmd run test:e2e`.
