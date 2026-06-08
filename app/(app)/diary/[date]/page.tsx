@@ -51,7 +51,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
             <GuardedDiaryLogoutButton />
           </header>
 
-          <DiaryEditor date={date} initialContent={initialContent} />
+          <DiaryEditor key={date} date={date} initialContent={initialContent} />
         </div>
       </DiaryUnsavedChangesProvider>
     </main>
