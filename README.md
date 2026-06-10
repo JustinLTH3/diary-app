@@ -4,15 +4,15 @@ A full-stack diary application with user authentication, a monthly calendar view
 
 ## Tech Stack
 
-| Layer       | Technology                             |
-| ----------- | -------------------------------------- |
-| Frontend    | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
-| Backend     | Next.js Route Handlers, server components |
-| Database    | PostgreSQL                             |
-| ORM         | Prisma 7                               |
-| Auth        | Auth.js with Credentials provider & JWT |
-| Validation  | Zod                                    |
-| Testing     | Vitest, React Testing Library, Playwright |
+| Layer      | Technology                                                    |
+| ---------- | ------------------------------------------------------------- |
+| Frontend   | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Backend    | Next.js Route Handlers, server components                     |
+| Database   | PostgreSQL                                                    |
+| ORM        | Prisma 7                                                      |
+| Auth       | Auth.js with Credentials provider & JWT                       |
+| Validation | Zod                                                           |
+| Testing    | Vitest, React Testing Library, Playwright                     |
 
 ## Prerequisites
 
@@ -45,10 +45,10 @@ A full-stack diary application with user authentication, a monthly calendar view
 
    Required variables:
 
-   | Variable       | Description                                    |
-   | -------------- | ---------------------------------------------- |
-   | `DATABASE_URL` | PostgreSQL connection string                   |
-   | `AUTH_SECRET`  | Random secret for Auth.js JWT encryption       |
+   | Variable       | Description                              |
+   | -------------- | ---------------------------------------- |
+   | `DATABASE_URL` | PostgreSQL connection string             |
+   | `AUTH_SECRET`  | Random secret for Auth.js JWT encryption |
 
 4. **Set up the database**
 
