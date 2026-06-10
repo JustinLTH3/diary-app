@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Diary App
+
+A full-stack diary application with user authentication, a monthly calendar view with entry markers, and a diary editor with auto-save.
+
+## Tech Stack
+
+| Layer      | Technology                                                    |
+| ---------- | ------------------------------------------------------------- |
+| Frontend   | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Backend    | Next.js Route Handlers, server components                     |
+| Database   | PostgreSQL                                                    |
+| ORM        | Prisma 7                                                      |
+| Auth       | Auth.js with Credentials provider & JWT                       |
+| Validation | Zod                                                           |
+| Testing    | Vitest, React Testing Library, Playwright                     |
+
+## Prerequisites
+
+- **Node.js** >= 22
+- **PostgreSQL** running locally or remotely
+- **npm** (or yarn / pnpm / bun)
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   ```bash
+   git clone https://github.com/JustinLTH3/diary-app.git
+   cd diary-app
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**
+
+   Copy `.env.example` to `.env` and fill in your values:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Required variables:
+
+   | Variable       | Description                              |
+   | -------------- | ---------------------------------------- |
+   | `DATABASE_URL` | PostgreSQL connection string             |
+   | `AUTH_SECRET`  | Random secret for Auth.js JWT encryption |
+
+4. **Set up the database**
+
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
+
+5. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+## Features
+
+- User authentication (signup / signin with email and password)
+- Protected routes
+- Monthly calendar view with previous/today/next navigation and diary-entry markers
+- Diary editor with debounced auto-save and save-state indicator (saving / saved / error)
+- Unsaved-changes confirmation on in-app navigation and browser unload
+- Writing count display
+
+## Project Structure
+
+```
+app/              # Next.js App Router pages and API routes
+components/       # React components (auth, calendar, diary)
+lib/              # Server helpers (auth, db, diary, dates, validation)
+prisma/           # Prisma schema and migrations
+tests/            # Vitest and Playwright test suites
+types/            # TypeScript declarations
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## See Also
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[`PLAN.md`](./PLAN.md) — full data model, implementation details, and testing plan.
