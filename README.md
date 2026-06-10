@@ -25,7 +25,7 @@ A full-stack diary application with user authentication, a monthly calendar view
 1. **Clone the repository**
 
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/JustinLTH3/diary-app.git
    cd diary-app
    ```
 
@@ -63,3 +63,27 @@ A full-stack diary application with user authentication, a monthly calendar view
    ```
 
    Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+## Features
+
+- User authentication (signup / signin with email and password)
+- Protected routes
+- Monthly calendar view with previous/today/next navigation and diary-entry markers
+- Diary editor with debounced auto-save and save-state indicator (saving / saved / error)
+- Unsaved-changes confirmation on in-app navigation and browser unload
+- Writing count display
+
+## Project Structure
+
+```
+app/              # Next.js App Router pages and API routes
+components/       # React components (auth, calendar, diary)
+lib/              # Server helpers (auth, db, diary, dates, validation)
+prisma/           # Prisma schema and migrations
+tests/            # Vitest and Playwright test suites
+types/            # TypeScript declarations
+```
+
+## See Also
+
+[`PLAN.md`](./PLAN.md) — full data model, implementation details, and testing plan.
