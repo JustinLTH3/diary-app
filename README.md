@@ -53,6 +53,7 @@ A full-stack diary application with user authentication, a monthly calendar view
 4. **Set up the database**
 
    ```bash
+   npx prisma generate
    npx prisma migrate dev
    ```
 
