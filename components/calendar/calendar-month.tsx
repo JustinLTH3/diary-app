@@ -90,7 +90,24 @@ export function CalendarMonth({ year, month, entryDates }: CalendarMonthProps) {
           const date = new Date(year, month - 1, day);
           const dateKey = date.toLocaleDateString("en-CA");
           const isToday = dateKey === todayDate;
+          const isFuture = dateKey > todayDate;
           const hasEntry = entryDateSet.has(dateKey);
+
+          if (isFuture) {
+            return (
+              <div
+                key={dateKey}
+                aria-disabled="true"
+                className="flex min-h-20 flex-col bg-signup-card p-2 text-sm text-signup-muted/50 sm:min-h-24 sm:p-3"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="flex size-8 items-center justify-center rounded-full text-sm font-semibold text-signup-muted/50">
+                    {day}
+                  </span>
+                </span>
+              </div>
+            );
+          }
 
           return (
             <Link
