@@ -4,18 +4,29 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 
-const initialStatus = "Create your account to begin writing.";
-const successStatus = "Account created.";
-const genericErrorStatus = "Unable to create account. Please try again.";
+enum FormStatus {
+  Idle = "Idle",
+  Submitting = "Submitting",
+  Success = "Success",
+  Error = "Error",
+}
+
+const staticMessages: Record<FormStatus, string> = {
+  [FormStatus.Idle]: "Create your account to begin writing.",
+  [FormStatus.Submitting]: "Creating account...",
+  [FormStatus.Success]: "Account created.",
+  [FormStatus.Error]: "Unable to create account. Please try again.",
+};
 
 type SignupResponse = {
   error?: string;
 };
 
 export function SignupForm() {
-  const [status, setStatus] = useState(initialStatus);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState(FormStatus.Idle);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const router = useRouter();
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -23,8 +34,8 @@ export function SignupForm() {
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    setIsSubmitting(true);
-    setStatus("Creating account...");
+    setStatus(FormStatus.Submitting);
+    setStatusMessage(null);
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -36,7 +47,7 @@ export function SignupForm() {
       });
 
       if (response.status === 201) {
-        setStatus(successStatus);
+        setStatus(FormStatus.Success);
         const result = await signIn("credentials", {
           email,
           password,
@@ -44,6 +55,7 @@ export function SignupForm() {
         });
 
         if (result?.ok && !result.error) {
+          setStatus(FormStatus.Idle);
           router.push("/calendar");
           router.refresh();
           return;
@@ -54,20 +66,22 @@ export function SignupForm() {
       const result = (await response.json().catch(() => ({}))) as SignupResponse;
 
       if (response.status === 400) {
-        setStatus(result.error ?? "Invalid signup credentials.");
+        setStatus(FormStatus.Error);
+        setStatusMessage(result.error ?? "Invalid signup credentials.");
         return;
       }
 
       if (response.status === 409) {
-        setStatus(result.error ?? "A user with this email already exists.");
+        setStatus(FormStatus.Error);
+        setStatusMessage(result.error ?? "A user with this email already exists.");
         return;
       }
 
-      setStatus(result.error ?? genericErrorStatus);
+      setStatus(FormStatus.Error);
+      setStatusMessage(result.error ?? null);
     } catch {
-      setStatus(genericErrorStatus);
-    } finally {
-      setIsSubmitting(false);
+      setStatus(FormStatus.Error);
+      setStatusMessage(null);
     }
   }
 
@@ -113,16 +127,16 @@ export function SignupForm() {
       </div>
 
       <p id="signup-form-status" aria-live="polite" className="min-h-5 text-xs text-signup-status">
-        {status}
+        {statusMessage ?? staticMessages[status]}
       </p>
 
       <div className="pt-2">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={status === FormStatus.Submitting}
           className="w-full rounded-lg bg-signup-primary px-12 py-6 text-sm leading-tight font-medium text-signup-on-primary shadow-sm transition-colors duration-300 hover:bg-signup-primary-hover focus:ring-3 focus:ring-signup-primary/25 focus:outline-none active:scale-95"
         >
-          {isSubmitting ? "Creating Account" : "Create Account"}
+          {status === FormStatus.Submitting ? "Creating Account" : "Create Account"}
         </button>
       </div>
     </form>
