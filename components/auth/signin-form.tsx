@@ -4,14 +4,23 @@ import { type SubmitEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-const initialStatus = "Sign in to continue writing.";
-const invalidCredentialsStatus = "Invalid email or password.";
-const genericErrorStatus = "Unable to sign in. Please try again.";
+enum FormStatus {
+  Idle = "Idle",
+  Submitting = "Submitting",
+  InvalidCredentials = "InvalidCredentials",
+  GenericError = "GenericError",
+}
+
+const statusMessages: Record<FormStatus, string> = {
+  [FormStatus.Idle]: "Sign in to continue writing.",
+  [FormStatus.Submitting]: "Signing in...",
+  [FormStatus.InvalidCredentials]: "Invalid email or password.",
+  [FormStatus.GenericError]: "Unable to sign in. Please try again.",
+};
 
 export function SigninForm() {
   const router = useRouter();
-  const [status, setStatus] = useState(initialStatus);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState(FormStatus.Idle);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,8 +29,7 @@ export function SigninForm() {
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    setIsSubmitting(true);
-    setStatus("Signing in...");
+    setStatus(FormStatus.Submitting);
 
     try {
       const result = await signIn("credentials", {
@@ -31,16 +39,15 @@ export function SigninForm() {
       });
 
       if (result?.ok && !result.error) {
+        setStatus(FormStatus.Idle);
         router.push("/calendar");
         router.refresh();
         return;
       }
 
-      setStatus(invalidCredentialsStatus);
+      setStatus(FormStatus.InvalidCredentials);
     } catch {
-      setStatus(genericErrorStatus);
-    } finally {
-      setIsSubmitting(false);
+      setStatus(FormStatus.GenericError);
     }
   }
 
@@ -86,16 +93,16 @@ export function SigninForm() {
       </div>
 
       <p id="signin-form-status" aria-live="polite" className="min-h-5 text-xs text-signup-status">
-        {status}
+        {statusMessages[status]}
       </p>
 
       <div className="pt-2">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={status === FormStatus.Submitting}
           className="w-full rounded-lg bg-signup-primary px-12 py-6 text-sm leading-tight font-medium text-signup-on-primary shadow-sm transition-colors duration-300 hover:bg-signup-primary-hover focus:ring-3 focus:ring-signup-primary/25 focus:outline-none active:scale-95"
         >
-          {isSubmitting ? "Signing In" : "Sign In"}
+          {status === FormStatus.Submitting ? "Signing In" : "Sign In"}
         </button>
       </div>
     </form>
