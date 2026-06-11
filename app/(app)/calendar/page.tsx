@@ -10,7 +10,11 @@ type CalendarPageProps = {
 export default async function CalendarPage({ searchParams }: CalendarPageProps = {}) {
   const user = await requireUser();
   const selectedMonth = getSelectedYearMonth(searchParams ? await searchParams : {});
-  const entryDates = await listFilledEntryDatesForMonth(user.id, selectedMonth.year, selectedMonth.month);
+  const entryDates = await listFilledEntryDatesForMonth(
+    user.id,
+    selectedMonth.year,
+    selectedMonth.month,
+  );
 
   return (
     <main className="min-h-screen flex-1 bg-signup-background px-4 py-6 text-signup-text sm:px-6 lg:px-8">
