@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { DiaryEditor } from "@/components/diary/diary-editor";
 import {
@@ -30,6 +30,12 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
 
   if (!parsedDate) {
     notFound();
+  }
+
+  const today = new Date().toLocaleDateString("en-CA");
+
+  if (date > today) {
+    redirect("/calendar");
   }
 
   const calendarHref = `/calendar?year=${parsedDate.getUTCFullYear()}&month=${
