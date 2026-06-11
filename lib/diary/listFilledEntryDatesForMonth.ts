@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 
-export async function listEntryDatesForMonth(userId: string, year: number, month: number) {
+export async function listFilledEntryDatesForMonth(userId: string, year: number, month: number) {
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const nextMonthStart = new Date(Date.UTC(year, month, 1));
   const entries = await prisma.diaryEntry.findMany({

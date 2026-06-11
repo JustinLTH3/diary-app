@@ -13,7 +13,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { getEntryForDate } from "@/lib/diary/getEntryForDate";
-import { listEntryDatesForMonth } from "@/lib/diary/listEntryDatesForMonth";
+import { listFilledEntryDatesForMonth } from "@/lib/diary/listFilledEntryDatesForMonth";
 import { saveEntryContent } from "@/lib/diary/saveEntryContent";
 
 describe("diary entry helpers", () => {
@@ -91,7 +91,7 @@ describe("diary entry helpers", () => {
       { date: new Date("2026-05-29T00:00:00.000Z") },
     ]);
 
-    await expect(listEntryDatesForMonth("user_1", 2026, 5)).resolves.toEqual([
+    await expect(listFilledEntryDatesForMonth("user_1", 2026, 5)).resolves.toEqual([
       "2026-05-01",
       "2026-05-29",
     ]);

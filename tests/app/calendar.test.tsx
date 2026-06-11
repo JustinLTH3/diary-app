@@ -5,15 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CalendarPage from "@/app/(app)/calendar/page";
 
 const requireUserMock = vi.hoisted(() => vi.fn());
-const listEntryDatesForMonthMock = vi.hoisted(() => vi.fn());
+const listFilledEntryDatesForMonthMock = vi.hoisted(() => vi.fn());
 const signOutMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/requireUser", () => ({
   requireUser: requireUserMock,
 }));
 
-vi.mock("@/lib/diary/listEntryDatesForMonth", () => ({
-  listEntryDatesForMonth: listEntryDatesForMonthMock,
+vi.mock("@/lib/diary/listFilledEntryDatesForMonth", () => ({
+  listFilledEntryDatesForMonth: listFilledEntryDatesForMonthMock,
 }));
 
 vi.mock("next-auth/react", () => ({
@@ -25,7 +25,7 @@ describe("CalendarPage", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 4, 29));
     requireUserMock.mockResolvedValue({ id: "user_1" });
-    listEntryDatesForMonthMock.mockResolvedValue([]);
+    listFilledEntryDatesForMonthMock.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -37,7 +37,7 @@ describe("CalendarPage", () => {
     render(await CalendarPage());
 
     expect(requireUserMock).toHaveBeenCalled();
-    expect(listEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 5);
+    expect(listFilledEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 5);
     expect(screen.getByText("Diary")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "May 2026" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe("CalendarPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "January 2026" })).toBeInTheDocument();
-    expect(listEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 1);
+    expect(listFilledEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 1);
   });
 
   it("links each day to the matching diary route", async () => {
@@ -72,7 +72,7 @@ describe("CalendarPage", () => {
   });
 
   it("renders markers for days with saved diary content", async () => {
-    listEntryDatesForMonthMock.mockResolvedValue(["2026-05-01", "2026-05-29"]);
+    listFilledEntryDatesForMonthMock.mockResolvedValue(["2026-05-01", "2026-05-29"]);
 
     render(
       await CalendarPage({
@@ -97,7 +97,7 @@ describe("CalendarPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "May 2026" })).toBeInTheDocument();
-    expect(listEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 5);
+    expect(listFilledEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 5);
   });
 
   it("links to previous and next months", async () => {
