@@ -1,7 +1,7 @@
 import { LogoutButton } from "@/components/auth/logout-button";
 import { CalendarMonth } from "@/components/calendar/calendar-month";
 import { requireUser } from "@/lib/auth/requireUser";
-import { listEntryDatesForMonth } from "@/lib/diary/listEntryDatesForMonth";
+import { listFilledEntryDatesForMonth } from "@/lib/diary/listFilledEntryDatesForMonth";
 
 type CalendarPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -9,8 +9,8 @@ type CalendarPageProps = {
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps = {}) {
   const user = await requireUser();
-  const selectedMonth = getSelectedMonth(searchParams ? await searchParams : {});
-  const entryDates = await listEntryDatesForMonth(user.id, selectedMonth.year, selectedMonth.month);
+  const selectedMonth = getSelectedYearMonth(searchParams ? await searchParams : {});
+  const entryDates = await listFilledEntryDatesForMonth(user.id, selectedMonth.year, selectedMonth.month);
 
   return (
     <main className="min-h-screen flex-1 bg-signup-background px-4 py-6 text-signup-text sm:px-6 lg:px-8">
@@ -33,7 +33,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps =
   );
 }
 
-function getSelectedMonth(searchParams: Record<string, string | string[] | undefined>) {
+function getSelectedYearMonth(searchParams: Record<string, string | string[] | undefined>) {
   const currentMonth = getCurrentMonth();
   const year = getSingleParam(searchParams.year);
   const month = getSingleParam(searchParams.month);
