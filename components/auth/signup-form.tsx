@@ -4,18 +4,13 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 
-enum FormStatus {
-  Idle = "Idle",
-  Submitting = "Submitting",
-  Success = "Success",
-  Error = "Error",
-}
+import { FormStatus } from "@/lib/auth/form-status";
 
-const staticMessages: Record<FormStatus, string> = {
+const staticMessages: Partial<Record<FormStatus, string>> = {
   [FormStatus.Idle]: "Create your account to begin writing.",
   [FormStatus.Submitting]: "Creating account...",
   [FormStatus.Success]: "Account created.",
-  [FormStatus.Error]: "Unable to create account. Please try again.",
+  [FormStatus.GenericError]: "Unable to create account. Please try again.",
 };
 
 type SignupResponse = {
@@ -66,21 +61,21 @@ export function SignupForm() {
       const result = (await response.json().catch(() => ({}))) as SignupResponse;
 
       if (response.status === 400) {
-        setStatus(FormStatus.Error);
+        setStatus(FormStatus.GenericError);
         setStatusMessage(result.error ?? "Invalid signup credentials.");
         return;
       }
 
       if (response.status === 409) {
-        setStatus(FormStatus.Error);
+        setStatus(FormStatus.GenericError);
         setStatusMessage(result.error ?? "A user with this email already exists.");
         return;
       }
 
-      setStatus(FormStatus.Error);
+      setStatus(FormStatus.GenericError);
       setStatusMessage(result.error ?? null);
     } catch {
-      setStatus(FormStatus.Error);
+      setStatus(FormStatus.GenericError);
       setStatusMessage(null);
     }
   }

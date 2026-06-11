@@ -4,14 +4,9 @@ import { type SubmitEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-enum FormStatus {
-  Idle = "Idle",
-  Submitting = "Submitting",
-  InvalidCredentials = "InvalidCredentials",
-  GenericError = "GenericError",
-}
+import { FormStatus } from "@/lib/auth/form-status";
 
-const statusMessages: Record<FormStatus, string> = {
+const statusMessages: Partial<Record<FormStatus, string>> = {
   [FormStatus.Idle]: "Sign in to continue writing.",
   [FormStatus.Submitting]: "Signing in...",
   [FormStatus.InvalidCredentials]: "Invalid email or password.",
