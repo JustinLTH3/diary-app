@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const credentials = authCredentialsSchema.parse(body);
-    const user = await createUser(credentials.email, credentials.password);
+    const user = await createUser(credentials.username, credentials.password);
 
     return Response.json({ user }, { status: 201 });
   } catch (error) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof DuplicateUserError) {
-      return Response.json({ error: "A user with this email already exists." }, { status: 409 });
+      return Response.json({ error: "A user with this username already exists." }, { status: 409 });
     }
 
     return Response.json({ error: "Unable to create user." }, { status: 500 });
