@@ -102,7 +102,9 @@ describe("SignupPage", () => {
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
-    expect(await screen.findByText("A user with this username already exists.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("A user with this username already exists."),
+    ).toBeInTheDocument();
   });
 
   it("disables the submit button while signup is pending", async () => {
