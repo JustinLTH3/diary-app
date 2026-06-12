@@ -19,11 +19,8 @@ export async function createUser(username: string, password: string) {
         username: credentials.username,
         passwordHash,
       },
-      select: {
-        id: true,
-        username: true,
-        createdAt: true,
-        updatedAt: true,
+      omit: {
+        passwordHash: true,
       },
     });
   } catch (error) {
