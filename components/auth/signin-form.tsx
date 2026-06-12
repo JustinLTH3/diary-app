@@ -9,7 +9,7 @@ import { FormStatus } from "@/lib/auth/form-status";
 const statusMessages: Partial<Record<FormStatus, string>> = {
   [FormStatus.Idle]: "Sign in to continue writing.",
   [FormStatus.Submitting]: "Signing in...",
-  [FormStatus.InvalidCredentials]: "Invalid email or password.",
+  [FormStatus.InvalidCredentials]: "Invalid username or password.",
   [FormStatus.GenericError]: "Unable to sign in. Please try again.",
 };
 
@@ -21,14 +21,14 @@ export function SigninForm() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "");
+    const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
 
     setStatus(FormStatus.Submitting);
 
     try {
       const result = await signIn("credentials", {
-        email,
+        username,
         password,
         redirect: false,
       });
@@ -49,22 +49,16 @@ export function SigninForm() {
   return (
     <form className="space-y-6" aria-describedby="signin-form-status" onSubmit={handleSubmit}>
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-xs leading-tight font-semibold text-signup-muted">
-          Email
+        <label className="text-xs leading-tight font-semibold text-signup-muted">
+          Username
+          <input
+            name="username"
+            required
+            autoComplete="username"
+            placeholder="Username"
+            className="mt-1 block w-full border-0 border-b-2 border-signup-input-border bg-transparent px-0 py-2 text-base leading-relaxed text-signup-text outline-none placeholder:text-signup-placeholder focus:border-signup-primary focus:ring-0 font-normal"
+          />
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="email@example.com"
-          aria-describedby="email-helper"
-          className="border-0 border-b-2 border-signup-input-border bg-transparent px-0 py-2 text-base leading-relaxed text-signup-text outline-none placeholder:text-signup-placeholder focus:border-signup-primary focus:ring-0"
-        />
-        <p id="email-helper" className="sr-only">
-          Enter the email for your Diary account.
-        </p>
       </div>
 
       <div className="flex flex-col gap-1">
