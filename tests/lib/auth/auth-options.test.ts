@@ -13,7 +13,7 @@ vi.mock("@/lib/auth/verifyCredentials", () => ({
 import { authOptions } from "@/auth";
 
 type DiaryCredentialsConfig = CredentialsConfig<{
-  email: { label: string; type: string };
+  username: { label: string; type: string };
   password: { label: string; type: string };
 }>;
 
@@ -39,12 +39,12 @@ describe("authOptions", () => {
   it("authorizes valid signin credentials", async () => {
     verifyCredentialsMock.mockResolvedValue({
       id: "user_1",
-      email: "person@example.com",
+      username: "person_test",
     });
 
     const user = await credentialsProvider.options.authorize(
       {
-        email: "person@example.com",
+        username: "person_test",
         password: "password123",
       },
       request,
@@ -52,9 +52,9 @@ describe("authOptions", () => {
 
     expect(user).toEqual({
       id: "user_1",
-      email: "person@example.com",
+      username: "person_test",
     });
-    expect(verifyCredentialsMock).toHaveBeenCalledWith("person@example.com", "password123");
+    expect(verifyCredentialsMock).toHaveBeenCalledWith("person_test", "password123");
   });
 
   it("rejects invalid signin credentials", async () => {
@@ -62,7 +62,7 @@ describe("authOptions", () => {
 
     const user = await credentialsProvider.options.authorize(
       {
-        email: "person@example.com",
+        username: "person_test",
         password: "wrong-password",
       },
       request,
@@ -81,7 +81,7 @@ describe("authOptions", () => {
   it("rejects malformed signin credentials before verification", async () => {
     const user = await credentialsProvider.options.authorize(
       {
-        email: "person@example.com",
+        username: "person_test",
         password: 123,
       } as never,
       request,
@@ -99,7 +99,7 @@ describe("authOptions", () => {
       token: {},
       user: {
         id: "user_1",
-        email: "person@example.com",
+        username: "person_test",
       },
       account: null,
     });
@@ -115,7 +115,7 @@ describe("authOptions", () => {
       session: {
         user: {
           id: "existing_user",
-          email: "person@example.com",
+          username: "person_test",
         },
         expires: "2026-05-27T00:00:00.000Z",
       } satisfies Session,
@@ -124,8 +124,7 @@ describe("authOptions", () => {
       } satisfies JWT,
       user: {
         id: "user_1",
-        email: "person@example.com",
-        emailVerified: null,
+        username: "person_test",
       } satisfies AdapterUser,
       newSession: null,
       trigger: "update",
