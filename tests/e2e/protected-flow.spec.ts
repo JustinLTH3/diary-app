@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import {
   createE2eAccountCredentials,
-  deleteE2eUserByEmail,
+  deleteE2eUserByUsername,
   signUpThroughUi,
 } from "./support/test-accounts";
 
@@ -23,7 +23,7 @@ test("redirects unauthenticated diary access to signin", async ({ page }) => {
 test("shows calendar month navigation and diary date links", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -44,14 +44,14 @@ test("shows calendar month navigation and diary date links", async ({ page }) =>
       "/diary/2026-05-29",
     );
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
 test("opens a diary date from the calendar", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -61,14 +61,14 @@ test("opens a diary date from the calendar", async ({ page }) => {
     await expect(page).toHaveURL(/\/diary\/2026-05-29$/);
     await expect(page.getByRole("heading", { name: "Friday, 29 May 2026" })).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
 test("loads empty content for a new diary date", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -77,7 +77,7 @@ test("loads empty content for a new diary date", async ({ page }) => {
     await expect(page.getByLabel("Diary entry")).toBeVisible();
     await expect(page.getByLabel("Diary entry")).toHaveValue("");
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -85,7 +85,7 @@ test("auto-saves diary content after editing", async ({ page }) => {
   const account = createE2eAccountCredentials();
   const content = "E2E saved diary content.";
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -93,7 +93,7 @@ test("auto-saves diary content after editing", async ({ page }) => {
 
     await saveDiaryContent(page, content);
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -101,7 +101,7 @@ test("reloads saved content for the same diary date", async ({ page }) => {
   const account = createE2eAccountCredentials();
   const content = "E2E saved diary content.";
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -112,7 +112,7 @@ test("reloads saved content for the same diary date", async ({ page }) => {
 
     await expect(page.getByLabel("Diary entry")).toHaveValue(content);
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -120,7 +120,7 @@ test("marks saved diary dates on the calendar", async ({ page }) => {
   const account = createE2eAccountCredentials();
   const content = "E2E saved diary content.";
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -131,14 +131,14 @@ test("marks saved diary dates on the calendar", async ({ page }) => {
 
     await expect(page.getByTestId("entry-marker-2026-05-29")).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
 test("logs out from the calendar and redirects to signin", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -148,7 +148,7 @@ test("logs out from the calendar and redirects to signin", async ({ page }) => {
     await expect(page).toHaveURL(/\/signin(?:\?|$)/);
     await expect(page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -156,7 +156,7 @@ test("logs out from a saved diary date and redirects to signin", async ({ page }
   const account = createE2eAccountCredentials();
   const content = "E2E saved diary content.";
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -168,14 +168,14 @@ test("logs out from a saved diary date and redirects to signin", async ({ page }
     await expect(page).toHaveURL(/\/signin(?:\?|$)/);
     await expect(page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
 test("signs back in and restores calendar access", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -187,7 +187,7 @@ test("signs back in and restores calendar access", async ({ page }) => {
     await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
     await expect(page.getByText("Choose a day to open your entry.")).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -195,7 +195,7 @@ test("signs back in and reopens saved diary content", async ({ page }) => {
   const account = createE2eAccountCredentials();
   const content = "E2E saved diary content.";
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -209,25 +209,25 @@ test("signs back in and reopens saved diary content", async ({ page }) => {
 
     await expect(page.getByLabel("Diary entry")).toHaveValue(content);
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
 test("shows invalid signin feedback without entering the app", async ({ page }) => {
   await page.goto("/signin");
-  await page.getByLabel("Email").fill("missing@example.com");
+  await page.getByLabel("Username").fill("missing_user");
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Sign In" }).click();
 
   await expect(page).toHaveURL(/\/signin(?:\?|$)/);
-  await expect(page.getByText("Invalid email or password.")).toBeVisible();
+  await expect(page.getByText("Invalid username or password.")).toBeVisible();
   await expect(page.getByText("Choose a day to open your entry.")).toBeHidden();
 });
 
 test("returns not found for authenticated invalid diary dates", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -236,7 +236,7 @@ test("returns not found for authenticated invalid diary dates", async ({ page })
 
     expect(response?.status()).toBe(404);
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });
 
@@ -245,7 +245,7 @@ async function signInThroughUi(
   account: ReturnType<typeof createE2eAccountCredentials>,
 ) {
   await page.goto("/signin");
-  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Username").fill(account.username);
   await page.getByLabel("Password").fill(account.password);
   await page.getByRole("button", { name: "Sign In" }).click();
   await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
