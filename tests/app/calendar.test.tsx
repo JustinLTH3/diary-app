@@ -100,6 +100,17 @@ describe("CalendarPage", () => {
     expect(listFilledEntryDatesForMonthMock).toHaveBeenCalledWith("user_1", 2026, 5);
   });
 
+  it("does not link to future dates", async () => {
+    render(
+      await CalendarPage({
+        searchParams: Promise.resolve({ year: "2026", month: "5" }),
+      }),
+    );
+
+    expect(screen.queryByRole("link", { name: "May 30, 2026" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "May 31, 2026" })).not.toBeInTheDocument();
+  });
+
   it("links to previous and next months", async () => {
     render(
       await CalendarPage({
