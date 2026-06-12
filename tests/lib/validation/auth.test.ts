@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import { authCredentialsSchema } from "@/lib/validation/auth";
 
 describe("authCredentialsSchema", () => {
-  it("normalizes valid credentials", () => {
+  it("validates valid credentials", () => {
     const credentials = authCredentialsSchema.parse({
-      email: "  PERSON@Example.COM  ",
+      username: "person_test",
       password: "password123",
     });
 
     expect(credentials).toEqual({
-      email: "person@example.com",
+      username: "person_test",
       password: "password123",
     });
   });
@@ -18,7 +18,7 @@ describe("authCredentialsSchema", () => {
   it("rejects invalid credentials", () => {
     expect(() =>
       authCredentialsSchema.parse({
-        email: "not-an-email",
+        username: "ab",
         password: "short",
       }),
     ).toThrow();

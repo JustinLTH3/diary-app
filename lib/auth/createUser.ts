@@ -4,24 +4,24 @@ import { authCredentialsSchema } from "@/lib/validation/auth";
 
 export class DuplicateUserError extends Error {
   constructor() {
-    super("A user with this email already exists.");
+    super("A user with this username already exists.");
     this.name = "DuplicateUserError";
   }
 }
 
-export async function createUser(email: string, password: string) {
-  const credentials = authCredentialsSchema.parse({ email, password });
+export async function createUser(username: string, password: string) {
+  const credentials = authCredentialsSchema.parse({ username, password });
   const passwordHash = await hashPassword(credentials.password);
 
   try {
     return await prisma.user.create({
       data: {
-        email: credentials.email,
+        username: credentials.username,
         passwordHash,
       },
       select: {
         id: true,
-        email: true,
+        username: true,
         createdAt: true,
         updatedAt: true,
       },

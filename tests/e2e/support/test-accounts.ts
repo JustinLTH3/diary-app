@@ -5,36 +5,35 @@ import { join } from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { Client } from "pg";
 
-const e2eEmailDomain = "example.com";
-const e2eEmailPrefix = "e2e";
+const e2eUsernamePrefix = "e2e";
 
 export type E2eAccountCredentials = {
-  email: string;
+  username: string;
   password: string;
 };
 
 export function createE2eAccountCredentials(): E2eAccountCredentials {
   return {
-    email: createE2eEmail(),
+    username: createE2eUsername(),
     password: "password123",
   };
 }
 
-export function createE2eEmail() {
+export function createE2eUsername() {
   const uniqueId = randomUUID().replaceAll("-", "").slice(0, 12);
 
-  return `${e2eEmailPrefix}-${Date.now()}-${uniqueId}@${e2eEmailDomain}`;
+  return `${e2eUsernamePrefix}_${Date.now()}_${uniqueId}`;
 }
 
 export async function signUpThroughUi(page: Page, account: E2eAccountCredentials) {
   await page.goto("/signup");
-  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Username").fill(account.username);
   await page.getByLabel("Password").fill(account.password);
   await page.getByRole("button", { name: "Create Account" }).click();
   await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
 }
 
-export async function deleteE2eUserByEmail(email: string) {
+export async function deleteE2eUserByUsername(username: string) {
   const client = new Client({
     connectionString: getDatabaseUrl(),
   });
@@ -42,7 +41,7 @@ export async function deleteE2eUserByEmail(email: string) {
   await client.connect();
 
   try {
-    await client.query('DELETE FROM "User" WHERE email = $1', [email]);
+    await client.query('DELETE FROM "User" WHERE username = $1', [username]);
   } finally {
     await client.end();
   }

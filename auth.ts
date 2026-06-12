@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        return verifyCredentials(credentials.email, credentials.password);
+        return verifyCredentials(credentials.username, credentials.password);
       },
     }),
   ],
@@ -47,6 +47,6 @@ export const authOptions: NextAuthOptions = {
 
 function hasCredentialStrings(
   credentials: Record<string, unknown> | undefined,
-): credentials is { email: string; password: string } {
-  return typeof credentials?.email === "string" && typeof credentials.password === "string";
+): credentials is { username: string; password: string } {
+  return typeof credentials?.username === "string" && typeof credentials.password === "string";
 }

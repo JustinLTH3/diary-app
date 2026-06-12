@@ -31,7 +31,7 @@ describe("SignupPage", () => {
     render(<SignupPage />);
 
     expect(screen.getByRole("heading", { name: "Begin Your Journey" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
+    expect(screen.getByLabelText("Username")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
     expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/signin");
@@ -47,7 +47,7 @@ describe("SignupPage", () => {
 
     render(<SignupPage />);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
@@ -57,7 +57,7 @@ describe("SignupPage", () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "person@example.com",
+        username: "person_test",
         password: "password123",
       }),
     });
@@ -74,12 +74,12 @@ describe("SignupPage", () => {
 
     render(<SignupPage />);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
     expect(signInMock).toHaveBeenCalledWith("credentials", {
-      email: "person@example.com",
+      username: "person_test",
       password: "password123",
       redirect: false,
     });
@@ -87,10 +87,10 @@ describe("SignupPage", () => {
     expect(refreshMock).toHaveBeenCalled();
   });
 
-  it("shows duplicate email feedback from the signup API", async () => {
+  it("shows duplicate username feedback from the signup API", async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ error: "A user with this email already exists." }), {
+      new Response(JSON.stringify({ error: "A user with this username already exists." }), {
         status: 409,
       }),
     );
@@ -98,11 +98,13 @@ describe("SignupPage", () => {
 
     render(<SignupPage />);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
-    expect(await screen.findByText("A user with this email already exists.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("A user with this username already exists."),
+    ).toBeInTheDocument();
   });
 
   it("disables the submit button while signup is pending", async () => {
@@ -118,7 +120,7 @@ describe("SignupPage", () => {
 
     render(<SignupPage />);
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 

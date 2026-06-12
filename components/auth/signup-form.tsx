@@ -4,27 +4,33 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 
-const initialStatus = "Create your account to begin writing.";
-const successStatus = "Account created.";
-const genericErrorStatus = "Unable to create account. Please try again.";
+import { FormStatus } from "@/lib/auth/form-status";
+
+const staticMessages: Partial<Record<FormStatus, string>> = {
+  [FormStatus.Idle]: "Create your account to begin writing.",
+  [FormStatus.Submitting]: "Creating account...",
+  [FormStatus.Success]: "Account created.",
+  [FormStatus.GenericError]: "Unable to create account. Please try again.",
+};
 
 type SignupResponse = {
   error?: string;
 };
 
 export function SignupForm() {
-  const [status, setStatus] = useState(initialStatus);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState(FormStatus.Idle);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const router = useRouter();
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "");
+    const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    setIsSubmitting(true);
-    setStatus("Creating account...");
+    setStatus(FormStatus.Submitting);
+    setStatusMessage(null);
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -32,18 +38,19 @@ export function SignupForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (response.status === 201) {
-        setStatus(successStatus);
+        setStatus(FormStatus.Success);
         const result = await signIn("credentials", {
-          email,
+          username,
           password,
           redirect: false,
         });
 
         if (result?.ok && !result.error) {
+          setStatus(FormStatus.Idle);
           router.push("/calendar");
           router.refresh();
           return;
@@ -54,42 +61,38 @@ export function SignupForm() {
       const result = (await response.json().catch(() => ({}))) as SignupResponse;
 
       if (response.status === 400) {
-        setStatus(result.error ?? "Invalid signup credentials.");
+        setStatus(FormStatus.GenericError);
+        setStatusMessage(result.error ?? "Invalid signup credentials.");
         return;
       }
 
       if (response.status === 409) {
-        setStatus(result.error ?? "A user with this email already exists.");
+        setStatus(FormStatus.GenericError);
+        setStatusMessage(result.error ?? "A user with this username already exists.");
         return;
       }
 
-      setStatus(result.error ?? genericErrorStatus);
+      setStatus(FormStatus.GenericError);
+      setStatusMessage(result.error ?? null);
     } catch {
-      setStatus(genericErrorStatus);
-    } finally {
-      setIsSubmitting(false);
+      setStatus(FormStatus.GenericError);
+      setStatusMessage(null);
     }
   }
 
   return (
     <form className="space-y-6" aria-describedby="signup-form-status" onSubmit={handleSubmit}>
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-xs leading-tight font-semibold text-signup-muted">
-          Email
+        <label className="text-xs leading-tight font-semibold text-signup-muted">
+          Username
+          <input
+            name="username"
+            required
+            autoComplete="username"
+            placeholder="Username"
+            className="mt-1 block w-full border-0 border-b-2 border-signup-input-border bg-transparent px-0 py-2 text-base leading-relaxed text-signup-text outline-none placeholder:text-signup-placeholder focus:border-signup-primary focus:ring-0 font-normal"
+          />
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="email@example.com"
-          aria-describedby="email-helper"
-          className="border-0 border-b-2 border-signup-input-border bg-transparent px-0 py-2 text-base leading-relaxed text-signup-text outline-none placeholder:text-signup-placeholder focus:border-signup-primary focus:ring-0"
-        />
-        <p id="email-helper" className="sr-only">
-          Enter the email you want to use when signing in.
-        </p>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -113,16 +116,16 @@ export function SignupForm() {
       </div>
 
       <p id="signup-form-status" aria-live="polite" className="min-h-5 text-xs text-signup-status">
-        {status}
+        {statusMessage ?? staticMessages[status]}
       </p>
 
       <div className="pt-2">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={status === FormStatus.Submitting}
           className="w-full rounded-lg bg-signup-primary px-12 py-6 text-sm leading-tight font-medium text-signup-on-primary shadow-sm transition-colors duration-300 hover:bg-signup-primary-hover focus:ring-3 focus:ring-signup-primary/25 focus:outline-none active:scale-95"
         >
-          {isSubmitting ? "Creating Account" : "Create Account"}
+          {status === FormStatus.Submitting ? "Creating Account" : "Create Account"}
         </button>
       </div>
     </form>

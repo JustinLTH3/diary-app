@@ -2,8 +2,8 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyPassword } from "@/lib/auth/verifyPassword";
 import { authCredentialsSchema } from "@/lib/validation/auth";
 
-export async function verifyCredentials(email: string, password: string) {
-  const parsed = authCredentialsSchema.safeParse({ email, password });
+export async function verifyCredentials(username: string, password: string) {
+  const parsed = authCredentialsSchema.safeParse({ username, password });
 
   if (!parsed.success) {
     return null;
@@ -11,11 +11,11 @@ export async function verifyCredentials(email: string, password: string) {
 
   const user = await prisma.user.findUnique({
     where: {
-      email: parsed.data.email,
+      username: parsed.data.username,
     },
     select: {
       id: true,
-      email: true,
+      username: true,
       passwordHash: true,
     },
   });
@@ -32,6 +32,6 @@ export async function verifyCredentials(email: string, password: string) {
 
   return {
     id: user.id,
-    email: user.email,
+    username: user.username,
   };
 }
