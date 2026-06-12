@@ -41,7 +41,7 @@ describe("SigninPage", () => {
     render(await SigninPage());
 
     expect(screen.getByRole("heading", { name: "Welcome Back" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
+    expect(screen.getByLabelText("Username")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
     expect(screen.getByRole("button", { name: "Sign In" })).toHaveAttribute("type", "submit");
     expect(screen.getByRole("link", { name: "Sign up" })).toHaveAttribute("href", "/signup");
@@ -66,12 +66,12 @@ describe("SigninPage", () => {
 
     render(await SigninPage());
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     expect(signInMock).toHaveBeenCalledWith("credentials", {
-      email: "person@example.com",
+      username: "person_test",
       password: "password123",
       redirect: false,
     });
@@ -86,11 +86,11 @@ describe("SigninPage", () => {
 
     render(await SigninPage());
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "wrong-password");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
-    expect(await screen.findByText("Invalid email or password.")).toBeInTheDocument();
+    expect(await screen.findByText("Invalid username or password.")).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });
 
@@ -106,7 +106,7 @@ describe("SigninPage", () => {
 
     render(await SigninPage());
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
@@ -125,7 +125,7 @@ describe("SigninPage", () => {
 
     render(await SigninPage());
 
-    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.type(screen.getByLabelText("Username"), "person_test");
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
