@@ -73,5 +73,5 @@ export function GuardedDiaryLink({ onNavigate, ...props }: GuardedDiaryLinkProps
 export function GuardedDiaryLogoutButton() {
   const { confirmExit } = useDiaryUnsavedChanges();
 
-  return <LogoutButton onBeforeLogout={confirmExit} />;
+  return <LogoutButton logoutGuard={confirmExit} />;
 }

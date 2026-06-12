@@ -3,15 +3,16 @@
 import { signOut } from "next-auth/react";
 
 type LogoutButtonProps = {
-  onBeforeLogout?: () => boolean;
+  /** Optional guard: return false to cancel logout (e.g. when there are unsaved changes) */
+  logoutGuard?: () => boolean;
 };
 
-export function LogoutButton({ onBeforeLogout }: LogoutButtonProps) {
+export function LogoutButton({ logoutGuard }: LogoutButtonProps) {
   return (
     <button
       type="button"
       onClick={() => {
-        if (onBeforeLogout && !onBeforeLogout()) {
+        if (logoutGuard && !logoutGuard()) {
           return;
         }
 
