@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import {
   createE2eAccountCredentials,
-  deleteE2eUserByEmail,
+  deleteE2eUserByUsername,
   signUpThroughUi,
 } from "./support/test-accounts";
 
@@ -16,7 +16,7 @@ test("redirects unauthenticated home to signin", async ({ page }) => {
 test("redirects authenticated home to calendar", async ({ page }) => {
   const account = createE2eAccountCredentials();
 
-  await deleteE2eUserByEmail(account.email);
+  await deleteE2eUserByUsername(account.username);
 
   try {
     await signUpThroughUi(page, account);
@@ -25,6 +25,6 @@ test("redirects authenticated home to calendar", async ({ page }) => {
     await expect(page).toHaveURL(/\/calendar(?:\?|$)/);
     await expect(page.getByText("Choose a day to open your entry.")).toBeVisible();
   } finally {
-    await deleteE2eUserByEmail(account.email);
+    await deleteE2eUserByUsername(account.username);
   }
 });

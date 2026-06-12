@@ -99,7 +99,7 @@ describe("authOptions", () => {
       token: {},
       user: {
         id: "user_1",
-        username: "person_test",
+        email: "person@example.com",
       },
       account: null,
     });
@@ -124,7 +124,8 @@ describe("authOptions", () => {
       } satisfies JWT,
       user: {
         id: "user_1",
-        username: "person_test",
+        email: "person@example.com",
+        emailVerified: null,
       } satisfies AdapterUser,
       newSession: null,
       trigger: "update",
